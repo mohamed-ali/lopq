@@ -18,8 +18,8 @@ from lopq.eval import compute_all_neighbors, get_cell_histogram, get_recall
 ########################################
 
 
-def relpath(x): return os.path.abspath(
-    os.path.join(os.path.dirname(__file__), x))
+def relpath(x):
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), x))
 
 
 def load_oxford_data():

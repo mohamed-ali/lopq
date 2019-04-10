@@ -156,8 +156,9 @@ def get_chunk_ranges(N, num_procs):
     per_thread = N / num_procs
     allocation = [per_thread] * num_procs
     allocation[0] += N - num_procs * per_thread
-    data_ranges = [0] + reduce(lambda acc, num: acc +
-                               [num + (acc[-1] if len(acc) else 0)], allocation, [])
+    data_ranges = [0] + reduce(
+        lambda acc, num: acc + [num + (acc[-1] if len(acc) else 0)],
+        allocation, [])
     data_ranges = [(data_ranges[i], data_ranges[i + 1])
                    for i in range(len(data_ranges) - 1)]
     return data_ranges
@@ -165,7 +166,7 @@ def get_chunk_ranges(N, num_procs):
 
 def compute_codes_parallel(data, model, num_procs=4):
     """
-    A helper function that parallelizes the computation of LOPQ codes in 
+    A helper function that parallelizes the computation of LOPQ codes in
     a configurable number of processes.
 
     :param ndarray data:

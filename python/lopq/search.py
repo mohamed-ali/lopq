@@ -301,8 +301,11 @@ class LOPQSearcherLMDB(LOPQSearcherBase):
         self.lmdb_path = lmdb_path
         self.id_lambda = id_lambda
 
-        self.env = lmdb.open(self.lmdb_path, map_size=1024 *
-                             2000000*2, writemap=False, map_async=True, max_dbs=1)
+        self.env = lmdb.open(self.lmdb_path,
+                             map_size=1024 * 2000000 * 2,
+                             writemap=False,
+                             map_async=True,
+                             max_dbs=1)
         self.index_db = self.env.open_db("index")
 
     def encode_cell(self, cell):

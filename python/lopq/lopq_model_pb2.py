@@ -2,10 +2,8 @@
 # source: lopq_model.proto
 
 import sys
-_b = (sys.version_info[0] < 3 and
-      (lambda x: x) or
-      (lambda x: x.encode('latin1'))
-      )
+_b = (sys.version_info[0] < 3 and (lambda x: x) or (
+      lambda x: x.encode('latin1')))
 
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
@@ -40,7 +38,7 @@ _VECTOR = _descriptor.Descriptor(
             is_extension=False, extension_scope=None,
             options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(),
                                               _b('\020\001'))
-            ),],
+        ), ],
     extensions=[],
     nested_types=[],
     enum_types=[],

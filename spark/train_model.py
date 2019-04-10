@@ -32,13 +32,13 @@ def default_data_loading(sc, data_path, sampling_ratio, seed):
                       ) * int(sc._conf.get('spark.executor.cores'))
 
     # Load and sample down the dataset
-    d = sc.textFile(data_path, total_cores *
-                    3).sample(False, sampling_ratio, seed)
+    d = (sc.textFile(data_path, total_cores * 3)
+         .sample(False, sampling_ratio, seed))
 
     # The data is (id, vector) tab-delimited pairs where each vector is
     # a base64-encoded pickled numpy array
-    def deserialize_vec(s): return pkl.loads(
-        base64.decodestring(s.split('\t')[1]))
+    def deserialize_vec(s):
+        return pkl.loads(base64.decodestring(s.split('\t')[1]))
     vecs = d.map(deserialize_vec)
 
     return vecs
@@ -389,8 +389,12 @@ if __name__ == "__main__":
     args = validate_arguments(args, model)
 
     # Build descriptive app name
-    def get_step_name(x): return {
-        STEP_COARSE: 'coarse', STEP_ROTATION: 'rotations', STEP_SUBQUANT: 'subquantizers'}.get(x, None)
+    def get_step_name(x):
+        mapping = {STEP_COARSE: 'coarse',
+                   STEP_ROTATION: 'rotations',
+                   STEP_SUBQUANT: 'subquantizers'}
+        return mapping.get(x, None)
+
     steps_str = ', '.join(filter(lambda x: x is not None,
                                  map(get_step_name, sorted(args.steps))))
     APP_NAME = 'LOPQ{V=%d,M=%d}; training %s' % (args.V, args.M, steps_str)

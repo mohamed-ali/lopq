@@ -3,13 +3,12 @@
 """
 This script illustrates how to prepare PCA parameters before using them in the LOPQ pipeline.
 
-The `pca_params` argument is the path to a pickle file containing PCA parameters like that 
+The `pca_params` argument is the path to a pickle file containing PCA parameters like that
 produced as a result of `train_pca.py`, and the `D` argument is the desired dimension of the
 final feature. This script truncates then permutes the dimensions of the PCA matrix to balance
 the variance across the the two halves of the final vector.
 """
 import cPickle as pkl
-import base64
 import numpy as np
 from lopq.model import eigenvalue_allocation
 

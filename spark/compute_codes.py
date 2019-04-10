@@ -21,8 +21,8 @@ def default_data_loading(sc, data_path, sampling_ratio, seed):
                       ) * int(sc._conf.get('spark.executor.cores'))
 
     # Load and sample down the dataset
-    d = sc.textFile(data_path, total_cores *
-                    3).sample(False, sampling_ratio, seed)
+    d = (sc.textFile(data_path, total_cores * 3)
+         .sample(False, sampling_ratio, seed))
 
     # The data is (id, vector) tab-delimited pairs where each vector is
     # a base64-encoded pickled numpy array

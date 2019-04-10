@@ -13,23 +13,26 @@ from operator import add
 
 def default_data_loading(sc, data_path, sampling_ratio, seed):
     """
-    This function loads training data from a text file, sampling it by the provided
-    ratio and random seed, and interprets each line as a tab-separated (id, data) pair
-    where 'data' is assumed to be a base64-encoded pickled numpy array. The ids are discarded.
+    This function loads training data from a text file,
+    sampling it by the provided ratio and random seed, and interprets
+    each line as a tab-separated (id, data) pair where 'data' is assumed
+    to be a base64-encoded pickled numpy array. The ids are discarded.
     The data is returned as an RDD of numpy arrays.
     """
-    # Compute the number of cores in our cluster - used below to heuristically set the number of partitions
+    # Compute the number of cores in our cluster - used below
+    # to heuristically set the number of partitions
     total_cores = int(sc._conf.get('spark.executor.instances')
                       ) * int(sc._conf.get('spark.executor.cores'))
 
     # Load and sample down the dataset
-    d = sc.textFile(data_path, total_cores *
-                    3).sample(False, sampling_ratio, seed)
+    d = (sc.textFile(data_path, total_cores * 3)
+         .sample(False, sampling_ratio, seed)
+         )
 
     # The data is (id, vector) tab-delimited pairs where each vector is
     # a base64-encoded pickled numpy array
-    def deserialize_vec(s): return pkl.loads(
-        base64.decodestring(s.split('\t')[1]))
+    def deserialize_vec(s):
+        return pkl.loads(base64.decodestring(s.split('\t')[1]))
     vecs = d.map(deserialize_vec)
 
     return vecs

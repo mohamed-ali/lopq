@@ -15,10 +15,10 @@ def udf(sc, data_path, sampling_ratio, seed):
                       ) * int(sc._conf.get('spark.executor.cores'))
 
     # Load and sample down the dataset
-    d = sc.textFile(data_path, total_cores *
-                    3).sample(False, sampling_ratio, seed)
+    d = (sc.textFile(data_path, total_cores * 3)
+         .sample(False, sampling_ratio, seed))
 
-    def deserialize_vec(s): return pkl.loads(base64.decodestring(s))
-    vecs = d.map(deserialize_vec)
+    def deserialize_vec(s):
+        return pkl.loads(base64.decodestring(s))
 
-    return vecs
+    return d.map(deserialize_vec)

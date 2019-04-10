@@ -748,16 +748,16 @@ class LOPQModel(object):
             m.values.extend(map(float, np.nditer(a, order='C')))
             return m
 
-        if self.Cs != None:
+        if self.Cs is not None:
             for C in self.Cs:
                 matrix_from_ndarray(lopq_params.Cs.add(), C)
-        if self.Rs != None:
+        if self.Rs is not None:
             for R in chain(*self.Rs):
                 matrix_from_ndarray(lopq_params.Rs.add(), R)
-        if self.mus != None:
+        if self.mus is not None:
             for mu in chain(*self.mus):
                 vector_from_ndarray(lopq_params.mus.add(), mu)
-        if self.subquantizers != None:
+        if self.subquantizers is not None:
             for sub in chain(*self.subquantizers):
                 matrix_from_ndarray(lopq_params.subs.add(), sub)
 

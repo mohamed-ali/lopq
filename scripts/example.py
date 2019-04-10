@@ -35,8 +35,8 @@ def pca(data):
     mu = data.sum(axis=0) / float(count)
 
     # Compute covariance
-    summed_covar = reduce(lambda acc, x: acc +
-                          np.outer(x, x), data, np.zeros((D, D)))
+    summed_covar = reduce(lambda acc, x: acc + np.outer(x, x),
+                          data, np.zeros((D, D)))
     A = summed_covar / (count - 1) - np.outer(mu, mu)
 
     # Compute eigen decomposition
