@@ -156,6 +156,7 @@ def get_subquantizer_distortion(data, model):
     pall = np.concatenate((p1, p2), axis=1)
     suball = model.subquantizers[0] + model.subquantizers[1]
 
-    dists = np.array([sum(np.linalg.norm(compute_residuals(d, c)[0], ord=2, axis=1) ** 2) for c, d in zip(suball, np.split(pall, 8, axis=1))])
+    dists = np.array([sum(np.linalg.norm(compute_residuals(d, c)[
+                     0], ord=2, axis=1) ** 2) for c, d in zip(suball, np.split(pall, 8, axis=1))])
 
     return dists / data.shape[0]

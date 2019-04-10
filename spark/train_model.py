@@ -28,14 +28,17 @@ def default_data_loading(sc, data_path, sampling_ratio, seed):
     The data is returned as an RDD of numpy arrays.
     """
     # Compute the number of cores in our cluster - used below to heuristically set the number of partitions
-    total_cores = int(sc._conf.get('spark.executor.instances')) * int(sc._conf.get('spark.executor.cores'))
+    total_cores = int(sc._conf.get('spark.executor.instances')
+                      ) * int(sc._conf.get('spark.executor.cores'))
 
     # Load and sample down the dataset
-    d = sc.textFile(data_path, total_cores * 3).sample(False, sampling_ratio, seed)
+    d = sc.textFile(data_path, total_cores *
+                    3).sample(False, sampling_ratio, seed)
 
     # The data is (id, vector) tab-delimited pairs where each vector is
     # a base64-encoded pickled numpy array
-    deserialize_vec = lambda s: pkl.loads(base64.decodestring(s.split('\t')[1]))
+    def deserialize_vec(s): return pkl.loads(
+        base64.decodestring(s.split('\t')[1]))
     vecs = d.map(deserialize_vec)
 
     return vecs
@@ -64,7 +67,8 @@ def train_coarse(sc, split_vecs, V, seed=None):
     first.cache()
     print 'Total training set size: %d' % first.count()
     print 'Starting training coarse quantizer...'
-    C0 = KMeans.train(first, V, initializationMode='random', maxIterations=10, seed=seed)
+    C0 = KMeans.train(first, V, initializationMode='random',
+                      maxIterations=10, seed=seed)
     print '... done training coarse quantizer.'
     first.unpersist()
 
@@ -72,7 +76,8 @@ def train_coarse(sc, split_vecs, V, seed=None):
     second = split_vecs.map(lambda x: x[1])
     second.cache()
     print 'Starting training coarse quantizer...'
-    C1 = KMeans.train(second, V, initializationMode='random', maxIterations=10, seed=seed)
+    C1 = KMeans.train(second, V, initializationMode='random',
+                      maxIterations=10, seed=seed)
     print '... done training coarse quantizer.'
     second.unpersist()
 
@@ -221,7 +226,8 @@ def train_subquantizers(sc, split_vecs, M, subquantizer_clusters, model, seed=No
     for split in xrange(M):
         data = split_vecs.map(lambda x: x[split])
         data.cache()
-        sub = KMeans.train(data, subquantizer_clusters, initializationMode='random', maxIterations=10, seed=seed)
+        sub = KMeans.train(data, subquantizer_clusters,
+                           initializationMode='random', maxIterations=10, seed=seed)
         data.unpersist()
         subquantizers.append(np.vstack(sub.clusterCenters))
 
@@ -326,15 +332,20 @@ def validate_arguments(args, model):
 
     return args
 
+
 if __name__ == "__main__":
     from argparse import ArgumentParser
     parser = ArgumentParser()
 
     # Data handling parameters
-    parser.add_argument('--data', dest='data', type=str, required=True, help='hdfs path to input data')
-    parser.add_argument('--data_udf', dest='data_udf', type=str, default=None, help='module name from which to load a data loading UDF')
-    parser.add_argument('--seed', dest='seed', type=int, default=None, help='optional random seed')
-    parser.add_argument('--sampling_ratio', dest='sampling_ratio', type=float, default=1.0, help='proportion of data to sample for training')
+    parser.add_argument('--data', dest='data', type=str,
+                        required=True, help='hdfs path to input data')
+    parser.add_argument('--data_udf', dest='data_udf', type=str, default=None,
+                        help='module name from which to load a data loading UDF')
+    parser.add_argument('--seed', dest='seed', type=int,
+                        default=None, help='optional random seed')
+    parser.add_argument('--sampling_ratio', dest='sampling_ratio', type=float,
+                        default=1.0, help='proportion of data to sample for training')
     parser.add_argument('--subquantizer_sampling_ratio', dest='subquantizer_sampling_ratio', type=float, default=1.0,
                         help='proportion of data to subsample for subquantizer training')
 
@@ -346,21 +357,27 @@ if __name__ == "__main__":
                                       help='a protobuf of existing model parameters')
 
     # Model hyperparameters
-    parser.add_argument('--V', dest='V', type=int, default=None, help='number of coarse clusters')
-    parser.add_argument('--M', dest='M', type=int, default=None, help='total number of subquantizers')
-    parser.add_argument('--subquantizer_clusters', dest='subquantizer_clusters', type=int, default=256, help='number of subquantizer clusters')
+    parser.add_argument('--V', dest='V', type=int,
+                        default=None, help='number of coarse clusters')
+    parser.add_argument('--M', dest='M', type=int, default=None,
+                        help='total number of subquantizers')
+    parser.add_argument('--subquantizer_clusters', dest='subquantizer_clusters',
+                        type=int, default=256, help='number of subquantizer clusters')
 
     # Training and output directives
     parser.add_argument('--steps', dest='steps', type=str, default='0,1,2',
                         help='comma-separated list of integers indicating which steps of training to perform')
-    parser.add_argument('--model_pkl', dest='model_pkl', type=str, default=None, help='hdfs path to save pickle file of resulting LOPQModel')
-    parser.add_argument('--model_proto', dest='model_proto', type=str, default=None, help='hdfs path to save protobuf file of resulting model parameters')
+    parser.add_argument('--model_pkl', dest='model_pkl', type=str, default=None,
+                        help='hdfs path to save pickle file of resulting LOPQModel')
+    parser.add_argument('--model_proto', dest='model_proto', type=str, default=None,
+                        help='hdfs path to save protobuf file of resulting model parameters')
 
     args = parser.parse_args()
 
     # Check that some output format was provided
     if args.model_pkl is None and args.model_proto is None:
-        parser.error('at least one of --model_pkl and --model_proto is required')
+        parser.error(
+            'at least one of --model_pkl and --model_proto is required')
 
     # Load existing model if provided
     model = None
@@ -372,8 +389,10 @@ if __name__ == "__main__":
     args = validate_arguments(args, model)
 
     # Build descriptive app name
-    get_step_name = lambda x: {STEP_COARSE: 'coarse', STEP_ROTATION: 'rotations', STEP_SUBQUANT: 'subquantizers'}.get(x, None)
-    steps_str = ', '.join(filter(lambda x: x is not None, map(get_step_name, sorted(args.steps))))
+    def get_step_name(x): return {
+        STEP_COARSE: 'coarse', STEP_ROTATION: 'rotations', STEP_SUBQUANT: 'subquantizers'}.get(x, None)
+    steps_str = ', '.join(filter(lambda x: x is not None,
+                                 map(get_step_name, sorted(args.steps))))
     APP_NAME = 'LOPQ{V=%d,M=%d}; training %s' % (args.V, args.M, steps_str)
 
     sc = SparkContext(appName=APP_NAME)
@@ -404,15 +423,19 @@ if __name__ == "__main__":
 
     # Get subquantizers
     if STEP_SUBQUANT in args.steps:
-        model = LOPQModel(V=args.V, M=args.M, subquantizer_clusters=args.subquantizer_clusters, parameters=(Cs, Rs, mus, None))
+        model = LOPQModel(
+            V=args.V, M=args.M, subquantizer_clusters=args.subquantizer_clusters, parameters=(Cs, Rs, mus, None))
 
         if args.subquantizer_sampling_ratio != 1.0:
-            data = data.sample(False, args.subquantizer_sampling_ratio, args.seed)
+            data = data.sample(
+                False, args.subquantizer_sampling_ratio, args.seed)
 
-        subs = train_subquantizers(sc, data, args.M, args.subquantizer_clusters, model, seed=args.seed)
+        subs = train_subquantizers(
+            sc, data, args.M, args.subquantizer_clusters, model, seed=args.seed)
 
     # Final output model
-    model = LOPQModel(V=args.V, M=args.M, subquantizer_clusters=args.subquantizer_clusters, parameters=(Cs, Rs, mus, subs))
+    model = LOPQModel(
+        V=args.V, M=args.M, subquantizer_clusters=args.subquantizer_clusters, parameters=(Cs, Rs, mus, subs))
 
     if args.model_pkl:
         save_hdfs_pickle(model, args.model_pkl)

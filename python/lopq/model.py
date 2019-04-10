@@ -46,7 +46,8 @@ def eigenvalue_allocation(num_buckets, eigenvalues):
     # We first must scale the eigenvalues by dividing by their
     # smallets non-zero value to avoid problems with the algorithm
     # when eigenvalues are less than 1.
-    min_non_zero_eigenvalue = np.min(np.abs(eigenvalues[np.nonzero(eigenvalues)]))
+    min_non_zero_eigenvalue = np.min(
+        np.abs(eigenvalues[np.nonzero(eigenvalues)]))
     eigenvalues = eigenvalues / min_non_zero_eigenvalue
 
     # Iterate eigenvalues in descending order
@@ -97,7 +98,8 @@ def compute_local_rotations(data, C, num_buckets):
 
     logger.info('Fitting local rotations...')
 
-    A, mu, count, assignments, residuals = accumulate_covariance_estimators(data, C)
+    A, mu, count, assignments, residuals = accumulate_covariance_estimators(
+        data, C)
 
     R, mu = compute_rotations_from_accumulators(A, mu, count, num_buckets)
 
@@ -132,11 +134,13 @@ def accumulate_covariance_estimators(data, C):
     D = data.shape[1]
 
     # Essential variables
-    A = np.zeros((V, D, D))                 # accumulators for covariance estimator per cluster
+    # accumulators for covariance estimator per cluster
+    A = np.zeros((V, D, D))
     mu = np.zeros((V, D))                   # residual means
     count = np.zeros(V, dtype=int)          # count of points per cluster
     assignments = np.zeros(N, dtype=int)    # point cluster assignments
-    residuals = np.zeros((N, D))            # residual for data points given cluster assignment
+    # residual for data points given cluster assignment
+    residuals = np.zeros((N, D))
 
     # Iterate data points, accumulate estimators
     for i in xrange(N):
@@ -189,11 +193,13 @@ def compute_rotations_from_accumulators(A, mu, count, num_buckets):
         mu[i] /= num_points
 
         # Compute covariance estimator
-        cov = (A[i] + A[i].transpose()) / (2 * (num_points - 1)) - np.outer(mu[i], mu[i])
+        cov = (A[i] + A[i].transpose()) / \
+            (2 * (num_points - 1)) - np.outer(mu[i], mu[i])
 
         # Compute eigenvalues, reuse A matrix
         if num_points < D:
-            logger.warn('Fewer points (%d) than dimensions (%d) in rotation computation for cluster %d' % (num_points, D, i))
+            logger.warn('Fewer points (%d) than dimensions (%d) in rotation computation for cluster %d' % (
+                num_points, D, i))
             eigenvalues = np.ones(D)
             A[i] = np.eye(D)
         else:
@@ -262,7 +268,8 @@ def train_coarse(data, V=8, kmeans_coarse_iters=10, n_init=10, random_state=None
     logger.info('Fitting coarse quantizer...')
 
     # Fit coarse model
-    model = KMeans(n_clusters=V, init="k-means++", max_iter=kmeans_coarse_iters, n_init=n_init, n_jobs=n_jobs, verbose=False, random_state=random_state)
+    model = KMeans(n_clusters=V, init="k-means++", max_iter=kmeans_coarse_iters,
+                   n_init=n_init, n_jobs=n_jobs, verbose=False, random_state=random_state)
     model.fit(data)
 
     logger.info('Done fitting coarse quantizer.')
@@ -348,8 +355,10 @@ def train(data, V=8, M=4, subquantizer_clusters=256, parameters=None,
         logger.info('Using existing coarse quantizers.')
         C1, C2 = Cs
     else:
-        C1 = train_coarse(first_half, V, kmeans_coarse_iters, n_init, random_state, n_jobs)
-        C2 = train_coarse(second_half, V, kmeans_coarse_iters, n_init, random_state, n_jobs)
+        C1 = train_coarse(first_half, V, kmeans_coarse_iters,
+                          n_init, random_state, n_jobs)
+        C2 = train_coarse(second_half, V, kmeans_coarse_iters,
+                          n_init, random_state, n_jobs)
 
     # Compute local rotations
     if Rs is not None and mus is not None:
@@ -358,15 +367,18 @@ def train(data, V=8, M=4, subquantizer_clusters=256, parameters=None,
         mu1, mu2 = mus
         assignments1 = assignments2 = residuals1 = residuals2 = None
     else:
-        Rs1, mu1, assignments1, residuals1 = compute_local_rotations(first_half, C1, M / 2)
-        Rs2, mu2, assignments2, residuals2 = compute_local_rotations(second_half, C2, M / 2)
+        Rs1, mu1, assignments1, residuals1 = compute_local_rotations(
+            first_half, C1, M / 2)
+        Rs2, mu2, assignments2, residuals2 = compute_local_rotations(
+            second_half, C2, M / 2)
 
     # Subquantizers don't need as much data, so we could sample here
     subquantizer_sample_ratio = min(subquantizer_sample_ratio, 1.0)
     N = data.shape[0]
     N2 = int(np.floor(subquantizer_sample_ratio * N))
     sample_inds = np.random.RandomState(random_state).choice(N, N2, False)
-    logger.info('Sampled training data for subquantizers with %f proportion (%d points).' % (subquantizer_sample_ratio, N2))
+    logger.info('Sampled training data for subquantizers with %f proportion (%d points).' % (
+        subquantizer_sample_ratio, N2))
 
     # Use assignments and residuals from rotation computation if available
     if assignments1 is not None:
@@ -375,8 +387,10 @@ def train(data, V=8, M=4, subquantizer_clusters=256, parameters=None,
         assignments1 = assignments1[sample_inds]
         assignments2 = assignments2[sample_inds]
     else:
-        residuals1, assignments1 = compute_residuals(first_half[sample_inds], C1)
-        residuals2, assignments2 = compute_residuals(second_half[sample_inds], C2)
+        residuals1, assignments1 = compute_residuals(
+            first_half[sample_inds], C1)
+        residuals2, assignments2 = compute_residuals(
+            second_half[sample_inds], C2)
 
     # Project residuals
     logger.info('Projecting residuals to local frame...')
@@ -384,8 +398,10 @@ def train(data, V=8, M=4, subquantizer_clusters=256, parameters=None,
     projected2 = project_residuals_to_local(residuals2, assignments2, Rs2, mu2)
 
     logger.info('Fitting subquantizers...')
-    subquantizers1 = train_subquantizers(projected1, M / 2, subquantizer_clusters, kmeans_local_iters, n_init, random_state=random_state, n_jobs=n_jobs)
-    subquantizers2 = train_subquantizers(projected2, M / 2, subquantizer_clusters, kmeans_local_iters, n_init, random_state=random_state, n_jobs=n_jobs)
+    subquantizers1 = train_subquantizers(
+        projected1, M / 2, subquantizer_clusters, kmeans_local_iters, n_init, random_state=random_state, n_jobs=n_jobs)
+    subquantizers2 = train_subquantizers(
+        projected2, M / 2, subquantizer_clusters, kmeans_local_iters, n_init, random_state=random_state, n_jobs=n_jobs)
     logger.info('Done fitting subquantizers.')
 
     return (C1, C2), (Rs1, Rs2), (mu1, mu2), (subquantizers1, subquantizers2)
@@ -393,6 +409,7 @@ def train(data, V=8, M=4, subquantizer_clusters=256, parameters=None,
 ########################################
 # Model class
 ########################################
+
 
 # Named tuple type for LOH codes
 LOPQCode = namedtuple('LOPQCode', ['coarse', 'fine'])
@@ -428,7 +445,8 @@ class LOPQModel(object):
         """
 
         # If learned parameters are passed in explicitly, derive the model params by inspection.
-        self.Cs, self.Rs, self.mus, self.subquantizers = parameters if parameters is not None else (None, None, None, None)
+        self.Cs, self.Rs, self.mus, self.subquantizers = parameters if parameters is not None else (
+            None, None, None, None)
 
         if self.Cs is not None:
             self.V = self.Cs[0].shape[0]
@@ -553,7 +571,8 @@ class LOPQModel(object):
             _, _, _, subC = self.get_split_parameters(split)
 
             # Compute subquantizer codes
-            fine_codes += [predict_cluster(fx, subC[sub_split]) for fx, sub_split in iterate_splits(cx, self.num_fine_splits)]
+            fine_codes += [predict_cluster(fx, subC[sub_split])
+                           for fx, sub_split in iterate_splits(cx, self.num_fine_splits)]
 
         return tuple(fine_codes)
 
@@ -577,7 +596,8 @@ class LOPQModel(object):
         if coarse_split is None:
             split_iter = iterate_splits(x, self.num_coarse_splits)
         else:
-            split_iter = [(np.split(x, self.num_coarse_splits)[coarse_split], coarse_split)]
+            split_iter = [(np.split(x, self.num_coarse_splits)
+                           [coarse_split], coarse_split)]
 
         for cx, split in split_iter:
 
@@ -615,7 +635,8 @@ class LOPQModel(object):
             C, R, mu, subC = self.get_split_parameters(split)
 
             # Concatenate the cluster centroids for this split of fine codes
-            sx = reduce(lambda acc, c: np.concatenate((acc, subC[c[0]][c[1]])), enumerate(fc), [])
+            sx = reduce(lambda acc, c: np.concatenate(
+                (acc, subC[c[0]][c[1]])), enumerate(fc), [])
 
             # Project residual out of local space
             cluster = coarse_codes[split]
@@ -650,12 +671,14 @@ class LOPQModel(object):
         if coarse_split is None:
             split_iter = iterate_splits(px, self.num_coarse_splits)
         else:
-            split_iter = [(np.split(px, self.num_coarse_splits)[coarse_split], coarse_split)]
+            split_iter = [(np.split(px, self.num_coarse_splits)
+                           [coarse_split], coarse_split)]
 
         # for cx, split in iterate_splits(px, self.num_coarse_splits):
         for cx, split in split_iter:
             _, _, _, subC = self.get_split_parameters(split)
-            subquantizer_dists += [((fx - subC[sub_split]) ** 2).sum(axis=1) for fx, sub_split in iterate_splits(cx, self.num_fine_splits)]
+            subquantizer_dists += [((fx - subC[sub_split]) ** 2).sum(axis=1)
+                                   for fx, sub_split in iterate_splits(cx, self.num_fine_splits)]
 
         return subquantizer_dists
 
@@ -681,7 +704,8 @@ class LOPQModel(object):
         mus = concat_new_first(self.mus)
         subs = concat_new_first(map(concat_new_first, self.subquantizers))
 
-        savemat(filename, {'Cs': Cs, 'Rs': Rs, 'mus': mus, 'subs': subs, 'V': self.V, 'M': self.M})
+        savemat(filename, {'Cs': Cs, 'Rs': Rs, 'mus': mus,
+                           'subs': subs, 'V': self.V, 'M': self.M})
 
     @staticmethod
     def load_mat(filename):
@@ -697,7 +721,8 @@ class LOPQModel(object):
         Rs = tuple(map(np.squeeze, np.split(d['Rs'], 2, axis=0)))
         mus = tuple(map(np.squeeze, np.split(d['mus'], 2, axis=0)))
 
-        subs = tuple([map(np.squeeze, np.split(half, M / 2, axis=0)) for half in map(np.squeeze, np.split(d['subs'], 2, axis=0))])
+        subs = tuple([map(np.squeeze, np.split(half, M / 2, axis=0))
+                      for half in map(np.squeeze, np.split(d['subs'], 2, axis=0))])
 
         return LOPQModel(parameters=(Cs, Rs, mus, subs))
 
@@ -763,11 +788,14 @@ class LOPQModel(object):
             if len(lopq_params.Cs) != 0:
                 Cs = [np.reshape(C.values, C.shape) for C in lopq_params.Cs]
             if len(lopq_params.Rs) != 0:
-                Rs = map(concat_new_first, halves([np.reshape(R.values, R.shape) for R in lopq_params.Rs]))
+                Rs = map(concat_new_first, halves(
+                    [np.reshape(R.values, R.shape) for R in lopq_params.Rs]))
             if len(lopq_params.mus) != 0:
-                mus = map(concat_new_first, halves([np.array(mu.values) for mu in lopq_params.mus]))
+                mus = map(concat_new_first, halves(
+                    [np.array(mu.values) for mu in lopq_params.mus]))
             if len(lopq_params.subs) != 0:
-                subs = halves([np.reshape(sub.values, sub.shape) for sub in lopq_params.subs])
+                subs = halves([np.reshape(sub.values, sub.shape)
+                               for sub in lopq_params.subs])
 
             return LOPQModel(parameters=(Cs, Rs, mus, subs))
 

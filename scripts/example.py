@@ -35,7 +35,8 @@ def pca(data):
     mu = data.sum(axis=0) / float(count)
 
     # Compute covariance
-    summed_covar = reduce(lambda acc, x: acc + np.outer(x, x), data, np.zeros((D, D)))
+    summed_covar = reduce(lambda acc, x: acc +
+                          np.outer(x, x), data, np.zeros((D, D)))
     A = summed_covar / (count - 1) - np.outer(mu, mu)
 
     # Compute eigen decomposition
@@ -97,7 +98,8 @@ def main():
     searcher = LOPQSearcher(m)
     searcher.add_data(train)
     recall, _ = get_recall(searcher, test, nns)
-    print 'Recall (V=%d, M=%d, subquants=%d): %s' % (m.V, m.M, m.subquantizer_clusters, str(recall))
+    print 'Recall (V=%d, M=%d, subquants=%d): %s' % (
+        m.V, m.M, m.subquantizer_clusters, str(recall))
 
     # We can experiment with other hyperparameters without discarding all
     # parameters everytime. Here we train a new model that uses the same coarse
@@ -109,20 +111,23 @@ def main():
     searcher = LOPQSearcher(m2)
     searcher.add_data(train)
     recall, _ = get_recall(searcher, test, nns)
-    print 'Recall (V=%d, M=%d, subquants=%d): %s' % (m2.V, m2.M, m2.subquantizer_clusters, str(recall))
+    print 'Recall (V=%d, M=%d, subquants=%d): %s' % (
+        m2.V, m2.M, m2.subquantizer_clusters, str(recall))
 
     # The recall is probably higher. We got better recall with a finer quantization
     # at the expense of more data required for index items.
 
     # We can also hold both coarse quantizers and rotations fixed and see what
     # increasing the number of subquantizer clusters does to performance.
-    m3 = LOPQModel(V=16, M=8, subquantizer_clusters=512, parameters=(m.Cs, m.Rs, m.mus, None))
+    m3 = LOPQModel(V=16, M=8, subquantizer_clusters=512,
+                   parameters=(m.Cs, m.Rs, m.mus, None))
     m3.fit(train, n_init=1)
 
     searcher = LOPQSearcher(m3)
     searcher.add_data(train)
     recall, _ = get_recall(searcher, test, nns)
-    print 'Recall (V=%d, M=%d, subquants=%d): %s' % (m3.V, m3.M, m3.subquantizer_clusters, str(recall))
+    print 'Recall (V=%d, M=%d, subquants=%d): %s' % (
+        m3.V, m3.M, m3.subquantizer_clusters, str(recall))
 
     # The recall is probably better than the first but worse than the second. We increased recall
     # only a little by increasing the number of model parameters (double the subquatizer centroids),

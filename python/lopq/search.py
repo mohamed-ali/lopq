@@ -146,10 +146,12 @@ class LOPQSearcherBase(object):
             c0, c1 = coarse
 
             if c0 not in d0:
-                d0[c0] = self.model.get_subquantizer_distances(x, coarse, coarse_split=0)
+                d0[c0] = self.model.get_subquantizer_distances(
+                    x, coarse, coarse_split=0)
 
             if c1 not in d1:
-                d1[c1] = self.model.get_subquantizer_distances(x, coarse, coarse_split=1)
+                d1[c1] = self.model.get_subquantizer_distances(
+                    x, coarse, coarse_split=1)
 
             return d0[c0] + d1[c1]
 
@@ -160,7 +162,8 @@ class LOPQSearcherBase(object):
             coarse, fine = codes
 
             subquantizer_distances = get_subquantizer_distances(x, coarse)
-            dist = sum([subquantizer_distances[i][fc] for i, fc in enumerate(fine)])
+            dist = sum([subquantizer_distances[i][fc]
+                        for i, fc in enumerate(fine)])
 
             results.append((dist, item))
 
@@ -232,6 +235,7 @@ class LOPQSearcherBase(object):
         """
         raise NotImplementedError()
 
+
 class LOPQSearcher(LOPQSearcherBase):
     def __init__(self, model):
         """
@@ -297,7 +301,8 @@ class LOPQSearcherLMDB(LOPQSearcherBase):
         self.lmdb_path = lmdb_path
         self.id_lambda = id_lambda
 
-        self.env = lmdb.open(self.lmdb_path, map_size=1024*2000000*2, writemap=False, map_async=True, max_dbs=1)
+        self.env = lmdb.open(self.lmdb_path, map_size=1024 *
+                             2000000*2, writemap=False, map_async=True, max_dbs=1)
         self.index_db = self.env.open_db("index")
 
     def encode_cell(self, cell):

@@ -19,14 +19,17 @@ def default_data_loading(sc, data_path, sampling_ratio, seed):
     The data is returned as an RDD of numpy arrays.
     """
     # Compute the number of cores in our cluster - used below to heuristically set the number of partitions
-    total_cores = int(sc._conf.get('spark.executor.instances')) * int(sc._conf.get('spark.executor.cores'))
+    total_cores = int(sc._conf.get('spark.executor.instances')
+                      ) * int(sc._conf.get('spark.executor.cores'))
 
     # Load and sample down the dataset
-    d = sc.textFile(data_path, total_cores * 3).sample(False, sampling_ratio, seed)
+    d = sc.textFile(data_path, total_cores *
+                    3).sample(False, sampling_ratio, seed)
 
     # The data is (id, vector) tab-delimited pairs where each vector is
     # a base64-encoded pickled numpy array
-    deserialize_vec = lambda s: pkl.loads(base64.decodestring(s.split('\t')[1]))
+    def deserialize_vec(s): return pkl.loads(
+        base64.decodestring(s.split('\t')[1]))
     vecs = d.map(deserialize_vec)
 
     return vecs
@@ -55,7 +58,8 @@ def main(sc, args, data_load_fn=default_data_loading):
     mu = mu / float(count)
 
     # Compute covariance estimator
-    summed_covar = d.treeAggregate(np.zeros((D, D)), seqOp, combOp, depth=args.agg_depth)
+    summed_covar = d.treeAggregate(
+        np.zeros((D, D)), seqOp, combOp, depth=args.agg_depth)
 
     A = summed_covar / (count - 1) - np.outer(mu, mu)
     E, P = np.linalg.eigh(A)
@@ -95,13 +99,19 @@ if __name__ == '__main__':
     parser = ArgumentParser()
 
     # Data handling parameters
-    parser.add_argument('--data', dest='data', type=str, required=True, help='hdfs path to input data')
-    parser.add_argument('--data_udf', dest='data_udf', type=str, default=None, help='module name from which to load a data loading UDF')
-    parser.add_argument('--seed', dest='seed', type=int, default=None, help='optional random seed')
-    parser.add_argument('--sampling_ratio', dest='sampling_ratio', type=float, default=1.0, help='proportion of data to sample for training')
-    parser.add_argument('--agg_depth', dest='agg_depth', type=int, default=4, help='depth of tree aggregation to compute covariance estimator')
+    parser.add_argument('--data', dest='data', type=str,
+                        required=True, help='hdfs path to input data')
+    parser.add_argument('--data_udf', dest='data_udf', type=str, default=None,
+                        help='module name from which to load a data loading UDF')
+    parser.add_argument('--seed', dest='seed', type=int,
+                        default=None, help='optional random seed')
+    parser.add_argument('--sampling_ratio', dest='sampling_ratio', type=float,
+                        default=1.0, help='proportion of data to sample for training')
+    parser.add_argument('--agg_depth', dest='agg_depth', type=int, default=4,
+                        help='depth of tree aggregation to compute covariance estimator')
 
-    parser.add_argument('--output', dest='output', type=str, default=None, help='hdfs path to output pickle file of parameters')
+    parser.add_argument('--output', dest='output', type=str, default=None,
+                        help='hdfs path to output pickle file of parameters')
 
     args = parser.parse_args()
 

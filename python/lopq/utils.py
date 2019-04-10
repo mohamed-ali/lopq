@@ -79,7 +79,8 @@ def load_xvecs(filename, base_type='f', max_num=None):
             if j == 0:
                 np.uint32(struct.unpack(format_code, f.read(4)))
             else:
-                A[i, j - 1] = py_type(struct.unpack(format_code, f.read(format_size))[0])
+                A[i, j - 1] = py_type(struct.unpack(format_code,
+                                                    f.read(format_size))[0])
     f.close()
     return np.squeeze(A)
 
@@ -130,7 +131,8 @@ def parmap(f, X, nprocs=multiprocessing.cpu_count()):
     q_in = multiprocessing.Queue(1)
     q_out = multiprocessing.Queue()
 
-    proc = [multiprocessing.Process(target=func_wrap, args=(f, q_in, q_out)) for _ in range(nprocs)]
+    proc = [multiprocessing.Process(target=func_wrap, args=(
+        f, q_in, q_out)) for _ in range(nprocs)]
     for p in proc:
         p.daemon = True
         p.start()
@@ -154,8 +156,10 @@ def get_chunk_ranges(N, num_procs):
     per_thread = N / num_procs
     allocation = [per_thread] * num_procs
     allocation[0] += N - num_procs * per_thread
-    data_ranges = [0] + reduce(lambda acc, num: acc + [num + (acc[-1] if len(acc) else 0)], allocation, [])
-    data_ranges = [(data_ranges[i], data_ranges[i + 1]) for i in range(len(data_ranges) - 1)]
+    data_ranges = [0] + reduce(lambda acc, num: acc +
+                               [num + (acc[-1] if len(acc) else 0)], allocation, [])
+    data_ranges = [(data_ranges[i], data_ranges[i + 1])
+                   for i in range(len(data_ranges) - 1)]
     return data_ranges
 
 

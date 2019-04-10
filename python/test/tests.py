@@ -18,7 +18,8 @@ from lopq.eval import compute_all_neighbors, get_cell_histogram, get_recall
 ########################################
 
 
-relpath = lambda x: os.path.abspath(os.path.join(os.path.dirname(__file__), x))
+def relpath(x): return os.path.abspath(
+    os.path.join(os.path.dirname(__file__), x))
 
 
 def load_oxford_data():
@@ -39,7 +40,8 @@ def make_random_model():
 
 
 def test_eigenvalue_allocation():
-    a = pkl.load(open(relpath('./testdata/test_eigenvalue_allocation_input.pkl')))
+    a = pkl.load(
+        open(relpath('./testdata/test_eigenvalue_allocation_input.pkl')))
 
     vals, vecs = np.linalg.eigh(a)
     res = eigenvalue_allocation(4, vals)
@@ -73,8 +75,10 @@ def test_eigenvalue_allocation_normalized_features():
 
 
 def test_accumulate_covariance_estimators():
-    data, centroids = pkl.load(open(relpath('./testdata/test_accumulate_covariance_estimators_input.pkl')))
-    expected = pkl.load(open(relpath('./testdata/test_accumulate_covariance_estimators_output.pkl')))
+    data, centroids = pkl.load(
+        open(relpath('./testdata/test_accumulate_covariance_estimators_input.pkl')))
+    expected = pkl.load(
+        open(relpath('./testdata/test_accumulate_covariance_estimators_output.pkl')))
 
     actual = accumulate_covariance_estimators(data, centroids)
 
@@ -96,8 +100,10 @@ def test_accumulate_covariance_estimators():
 
 def test_compute_rotations_from_accumulators():
 
-    A, mu, count, num_buckets = pkl.load(open(relpath('./testdata/test_compute_rotations_from_accumulators_input.pkl')))
-    expected = pkl.load(open(relpath('./testdata/test_compute_rotations_from_accumulators_output.pkl')))
+    A, mu, count, num_buckets = pkl.load(
+        open(relpath('./testdata/test_compute_rotations_from_accumulators_input.pkl')))
+    expected = pkl.load(
+        open(relpath('./testdata/test_compute_rotations_from_accumulators_output.pkl')))
 
     actual = compute_rotations_from_accumulators(A, mu, count, num_buckets)
 
@@ -113,7 +119,8 @@ def test_reconstruction():
 
     code = ((0, 1), (0, 1, 2, 3))
     r = m.reconstruct(code)
-    expected = [-2.27444688, 6.47126941, 4.5042611, 4.76683476, 0.83671082, 9.36027283, 8.11780532, 6.34846377]
+    expected = [-2.27444688, 6.47126941, 4.5042611, 4.76683476,
+                0.83671082, 9.36027283, 8.11780532, 6.34846377]
 
     assert_true(np.allclose(expected, r))
 
@@ -122,7 +129,8 @@ def test_oxford5k():
 
     random_state = 40
     data = load_oxford_data()
-    train, test = train_test_split(data, test_size=0.2, random_state=random_state)
+    train, test = train_test_split(
+        data, test_size=0.2, random_state=random_state)
 
     # Compute distance-sorted neighbors in training set for each point in test set
     nns = compute_all_neighbors(test, train)
@@ -132,7 +140,8 @@ def test_oxford5k():
     m.fit(train, n_init=1, random_state=random_state)
 
     # Assert correct code computation
-    assert_equal(m.predict(test[0]), ((3, 2), (14, 164, 83, 49, 185, 29, 196, 250)))
+    assert_equal(m.predict(test[0]),
+                 ((3, 2), (14, 164, 83, 49, 185, 29, 196, 250)))
 
     # Assert low number of empty cells
     h = get_cell_histogram(train, m)
@@ -277,7 +286,7 @@ def test_proto_partial():
     import os
 
     filename = './temp_proto_partial.lopq'
-    c = (np.random.rand(8, 8), np.random.rand(8,8))
+    c = (np.random.rand(8, 8), np.random.rand(8, 8))
     m = LOPQModel(parameters=(c, None, None, None))
     m.export_proto(filename)
     m2 = LOPQModel.load_proto(filename)
@@ -289,6 +298,6 @@ def test_proto_partial():
     assert_true(np.allclose(m.Cs[0], m2.Cs[0]))
     assert_true(m.Rs == m2.Rs)
     assert_true(m.mus == m2.mus)
-    assert_true(m.subquantizers ==  m.subquantizers)
+    assert_true(m.subquantizers == m.subquantizers)
 
     os.remove(filename)
