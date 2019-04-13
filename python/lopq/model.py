@@ -274,8 +274,9 @@ def train_coarse(data, V=8, kmeans_coarse_iters=10, n_init=10,
     logger.info('Fitting coarse quantizer...')
 
     # Fit coarse model
-    model = KMeans(n_clusters=V, init="k-means++", max_iter=kmeans_coarse_iters,
-                   n_init=n_init, n_jobs=n_jobs, verbose=False, random_state=random_state)
+    model = KMeans(n_clusters=V, init="k-means++", n_init=n_init,
+                   n_jobs=n_jobs, max_iter=kmeans_coarse_iters,
+                   verbose=False, random_state=random_state)
     model.fit(data)
 
     logger.info('Done fitting coarse quantizer.')
@@ -447,7 +448,11 @@ class LOPQModel(object):
 
             the tuple will look like the following
 
-            ((C1, C2), (Rs1, Rs2), (mu1, mu2), (subquantizers1, subquantizers2))
+            ((C1, C2),
+             (Rs1, Rs2),
+             (mu1, mu2),
+             (subquantizers1, subquantizers2)
+            )
 
             where each element is itself a pair with one split of parameters
             for the each of the coarse splits.
@@ -457,12 +462,15 @@ class LOPQModel(object):
             and S is the number of subquantizer clusters):
 
                 C: VxD/2 ndarray of coarse centroids
-                R: VxD/2xD/2 ndarray of fitted rotation matrices for each coarse cluster
+                R: VxD/2xD/2 ndarray of fitted rotation matrices for each
+                   coarse cluster
                 mu: VxD/2 ndarray of mean residuals for each coar cluster
-                subquantizer: length M/2 list of SxD/M ndarrays of cluster centroids for each subvector
+                subquantizer: length M/2 list of SxD/M ndarrays of cluster
+                              centroids for each subvector
         """
 
-        # If learned parameters are passed in explicitly, derive the model params by inspection.
+        # If learned parameters are passed in explicitly, derive the model
+        # params by inspection.
         self.Cs, self.Rs, self.mus, self.subquantizers = parameters or (
             None, None, None, None)
 
@@ -493,12 +501,15 @@ class LOPQModel(object):
         :param int kmeans_local_iters:
             the number of kmeans iterations for subquantizer taining
         :param int n_init:
-            the number of independent kmeans runs for all kmeans when training - set low for faster training
+            The number of independent kmeans runs for all kmeans when training.
+            Set low for faster training
         :param float subquantizer_sample_ratio:
-            the proportion of the training data to sample for training subquantizers - since the number of
-            subquantizer clusters is much smaller then the number of coarse clusters, less data is needed
+            The proportion of the training data to sample for training
+            subquantizers. Since the number of subquantizer clusters is much
+            smaller then the number of coarse clusters, less data is needed
         :param int random_state:
-            a random seed used in all random operations during training if provided
+            a random seed used in all random operations during training
+            if provided
         :param bool verbose:
             a bool enabling verbose output during training
         :param int n_jobs:
@@ -508,7 +519,8 @@ class LOPQModel(object):
 
         parameters = train(data, self.V, self.M, self.subquantizer_clusters,
                            existing_parameters, kmeans_coarse_iters,
-                           kmeans_local_iters, n_init, subquantizer_sample_ratio,
+                           kmeans_local_iters, n_init,
+                           subquantizer_sample_ratio,
                            random_state, verbose, n_jobs)
 
         self.Cs, self.Rs, self.mus, self.subquantizers = parameters
@@ -527,12 +539,15 @@ class LOPQModel(object):
         :returns list:
             a list of rotation matrices for each cluster
         :returns list:
-            a list of centroid matrices for each subquantizer in this coarse split
+            a list of centroid matrices for each subquantizer
+            in this coarse split
         """
-        return self.Cs[split] if self.Cs is not None else None, \
-            self.Rs[split] if self.Rs is not None else None, \
-            self.mus[split] if self.mus is not None else None, \
-            self.subquantizers[split] if self.subquantizers is not None else None
+        return (
+            self.Cs[split] if self.Cs else None,
+            self.Rs[split] if self.Rs else None,
+            self.mus[split] if self.mus else None,
+            self.subquantizers[split] if self.subquantizers else None
+            )
 
     def predict(self, x):
         """
@@ -564,7 +579,10 @@ class LOPQModel(object):
         :returns tuple:
             a tuple of coarse codes
         """
-        return tuple([predict_cluster(cx, self.Cs[split]) for cx, split in iterate_splits(x, self.num_coarse_splits)])
+        return tuple([
+            predict_cluster(cx, self.Cs[split])
+            for cx, split in iterate_splits(x, self.num_coarse_splits)
+            ])
 
     def predict_fine(self, x, coarse_codes=None):
         """
@@ -591,22 +609,23 @@ class LOPQModel(object):
             _, _, _, subC = self.get_split_parameters(split)
 
             # Compute subquantizer codes
-            fine_codes += [predict_cluster(fx, subC[sub_split])
-                           for fx, sub_split in iterate_splits(cx, self.num_fine_splits)]
+            fine_codes += [
+                predict_cluster(fx, subC[sub_split])
+                for fx, sub_split in iterate_splits(cx, self.num_fine_splits)]
 
         return tuple(fine_codes)
 
     def project(self, x, coarse_codes, coarse_split=None):
-        """
-        Project this vector to its local residual space defined by the coarse codes.
+        """ Project this vector to its local residual space defined
+        by the coarsecodes.
 
         :param ndarray x:
             the point to project
         :param ndarray coarse_codes:
             the coarse codes defining the local space
         :param int coarse_split:
-            index of the coarse split to get distances for - if None then all splits
-            are computed
+            index of the coarse split to get distances for.
+            If None then all splits are computed
 
         :returns ndarray:
             the projected vector
@@ -669,20 +688,21 @@ class LOPQModel(object):
 
     def get_subquantizer_distances(self, x, coarse_codes, coarse_split=None):
         """
-        Project a given query vector to the local space of the given coarse codes
-        and compute the distances of each subvector to the corresponding subquantizer
-        clusters.
+        Project a given query vector to the local space of the given coarse
+        codes and compute the distances of each subvector to the corresponding
+        subquantizer clusters.
 
         :param ndarray x:
             a query  vector
         :param tuple coarse_codes:
             the coarse codes defining which local space to project to
         :param int coarse_split:
-            index of the coarse split to get distances for - if None then all splits
-            are computed
+            index of the coarse split to get distances for.
+            If None then all splits are computed
 
         :returns list:
-            a list of distances to each subquantizer cluster for each subquantizer
+            A list of distances to each subquantizer cluster
+            for each subquantizer.
         """
 
         px = self.project(x, coarse_codes)
@@ -697,8 +717,9 @@ class LOPQModel(object):
         # for cx, split in iterate_splits(px, self.num_coarse_splits):
         for cx, split in split_iter:
             _, _, _, subC = self.get_split_parameters(split)
-            subquantizer_dists += [((fx - subC[sub_split]) ** 2).sum(axis=1)
-                                   for fx, sub_split in iterate_splits(cx, self.num_fine_splits)]
+            subquantizer_dists += [
+                ((fx - subC[sub_split]) ** 2).sum(axis=1)
+                for fx, sub_split in iterate_splits(cx, self.num_fine_splits)]
 
         return subquantizer_dists
 
@@ -709,12 +730,13 @@ class LOPQModel(object):
         return (int(np.floor(float(cell_id) / self.V)), cell_id % self.V)
 
     def export_mat(self, filename):
-        """
-        Export model parameters in .mat file format.
+        """ Export model parameters in .mat file format.
 
-        Splits in the parameters (coarse splits and fine splits) are concatenated together in the
-        resulting arrays. For example, the Cs paramaters become a 2 x V x D array where the first dimension
-        indexes the split. The subquantizer centroids are encoded similarly as a 2 x (M/2) x 256 x (D/M) array.
+        Splits in the parameters (coarse splits and fine splits)
+        are concatenated together in the resulting arrays. For example, the Cs
+        paramaters become a 2 x V x D array where the first dimension indexes
+        the split. The subquantizer centroids are encoded similarly
+        as a 2 x (M/2) x 256 x (D/M) array.
         """
         from scipy.io import savemat
         from .utils import concat_new_first
@@ -730,7 +752,8 @@ class LOPQModel(object):
     @staticmethod
     def load_mat(filename):
         """
-        Reconstitute an LOPQModel in the format exported by the `export_mat` method above.
+        Reconstitute an LOPQModel in the format exported
+        by the `export_mat` method above.
         """
         from scipy.io import loadmat
 
@@ -741,8 +764,9 @@ class LOPQModel(object):
         Rs = tuple(map(np.squeeze, np.split(d['Rs'], 2, axis=0)))
         mus = tuple(map(np.squeeze, np.split(d['mus'], 2, axis=0)))
 
-        subs = tuple([map(np.squeeze, np.split(half, M / 2, axis=0))
-                      for half in map(np.squeeze, np.split(d['subs'], 2, axis=0))])
+        subs = tuple([
+            map(np.squeeze, np.split(half, M / 2, axis=0))
+            for half in map(np.squeeze, np.split(d['subs'], 2, axis=0))])
 
         return LOPQModel(parameters=(Cs, Rs, mus, subs))
 
@@ -820,5 +844,5 @@ class LOPQModel(object):
             return LOPQModel(parameters=(Cs, Rs, mus, subs))
 
         except IOError:
-            print filename + ": Could not open file."
+            print(filename + ": Could not open file.")
             return None
