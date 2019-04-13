@@ -1,5 +1,6 @@
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 import heapq
 from collections import defaultdict, namedtuple
 from itertools import count
@@ -12,7 +13,8 @@ def multisequence(x, centroids):
     """
     Implementation of multi-sequence algorithm for traversing a multi-index.
 
-    The algorithm is described in http://download.yandex.ru/company/cvpr2012.pdf.
+    The algorithm is described in:
+    - http://download.yandex.ru/company/cvpr2012.pdf.
 
     :param ndarray x:
         a query vector
@@ -100,8 +102,8 @@ class LOPQSearcherBase(object):
 
     def get_result_quota(self, x, quota=10):
         """
-        Given a query vector and result quota, retrieve as many cells as necessary
-        to fill the quota.
+        Given a query vector and result quota, retrieve as many cells
+        as necessary to fill the quota.
 
         :param ndarray x:
             a query vector
@@ -126,9 +128,10 @@ class LOPQSearcherBase(object):
 
     def compute_distances(self, x, items):
         """
-        Given a query and a list of index items, compute the approximate distance of the query
-        to each item and return a list of tuples that contain the distance and the item.
-        Memoize subquantizer distances per coarse cluster to save work.
+        Given a query and a list of index items, compute the approximate
+        distance of the query to each item and return a list of tuples
+        that contain the distance and the item. Memoize subquantizer
+        distances per coarse cluster to save work.
 
         :param ndarray x:
             a query vector
@@ -171,8 +174,8 @@ class LOPQSearcherBase(object):
 
     def search(self, x, quota=10, limit=None, with_dists=False):
         """
-        Return euclidean distance ranked results, along with the number of cells
-        traversed to fill the quota.
+        Return euclidean distance ranked results, along with the number
+        of cells traversed to fill the quota.
 
         :param ndarray x:
             a query vector
@@ -181,7 +184,8 @@ class LOPQSearcherBase(object):
         :param int limit:
             the number of desired results to return - defaults to quota
         :param bool with_dists:
-            boolean indicating whether result items should be returned with their distance
+            boolean indicating whether result items should be returned
+            with their distance
 
         :returns list results:
             the list of ranked results
@@ -239,9 +243,9 @@ class LOPQSearcherBase(object):
 class LOPQSearcher(LOPQSearcherBase):
     def __init__(self, model):
         """
-        Create an LOPQSearcher instance that encapsulates retrieving and ranking
-        with LOPQ. Requires an LOPQModel instance. This class uses a Python dict
-        to implement the index.
+        Create an LOPQSearcher instance that encapsulates retrieving
+        and ranking with LOPQ. Requires an LOPQModel instance. This class
+        uses a Python dict to implement the index.
 
         :param LOPQModel model:
             the model for indexing and ranking
@@ -283,17 +287,17 @@ class LOPQSearcher(LOPQSearcherBase):
 class LOPQSearcherLMDB(LOPQSearcherBase):
     def __init__(self, model, lmdb_path, id_lambda=int):
         """
-        Create an LOPQSearcher instance that encapsulates retrieving and ranking
-        with LOPQ. Requires an LOPQModel instance. This class uses an lmbd database
-        to implement the index.
+        Create an LOPQSearcher instance that encapsulates retrieving
+        and ranking with LOPQ. Requires an LOPQModel instance.
+        This class uses an lmbd database to implement the index.
 
         :param LOPQModel model:
             the model for indexing and ranking
         :param str lmdb_path:
             path for the lmdb database; if it does not exist it is created
         :param callable id_lambda:
-            a lambda function to reconstruct item ids from their string representation
-            (computed by calling `bytes`) during retrieval
+            a lambda function to reconstruct item ids from their string
+            representation (computed by calling `bytes`) during retrieval
         """
         import lmdb
 
