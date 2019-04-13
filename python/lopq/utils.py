@@ -1,5 +1,6 @@
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 import numpy as np
 import multiprocessing
 from itertools import chain
@@ -118,7 +119,8 @@ def save_xvecs(data, filename, base_type='f'):
 
 def parmap(f, X, nprocs=multiprocessing.cpu_count()):
     """
-    Parallel map implementation adapted from http://stackoverflow.com/questions/3288595/multiprocessing-using-pool-map-on-a-function-defined-in-a-class
+    Parallel map implementation adapted from
+    http://stackoverflow.com/questions/3288595/multiprocessing-using-pool-map-on-a-function-defined-in-a-class # noqa
     """
 
     def func_wrap(f, q_in, q_out):
@@ -149,9 +151,10 @@ def parmap(f, X, nprocs=multiprocessing.cpu_count()):
 
 def get_chunk_ranges(N, num_procs):
     """
-    A helper that given a number N representing the size of an iterable and the num_procs over which to
-    divide the data return a list of (start_index, end_index) pairs that divide the data as evenly as possible
-    into num_procs buckets.
+    A helper that given a number N representing the size of an iterable
+    and the num_procs over which to divide the data return a list
+    of (start_index, end_index) pairs that divide the data as evenly
+    as possible into num_procs buckets.
     """
     per_thread = N / num_procs
     allocation = [per_thread] * num_procs
