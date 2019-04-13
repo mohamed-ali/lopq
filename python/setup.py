@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 import os
 import json
 from setuptools import setup
@@ -29,10 +30,14 @@ setup_arguments = {
     'author_email': 'clayton@yahoo-inc.com',
     'url': 'http://github.com/yahoo/lopq',
     'license': 'Apache-2.0',
-    'keywords': ['lopq', 'locally optimized product quantization', 'product quantization', 'compression', 'ann', 'approximate nearest neighbor', 'similarity search'],
+    'keywords': ['lopq', 'locally optimized product quantization',
+                 'product quantization', 'compression', 'ann',
+                 'approximate nearest neighbor', 'similarity search'],
     'packages': ['lopq'],
     'long_description': LONG_DESCRIPTION,
-    'description': 'Python code for training and deploying Locally Optimized Product Quantization (LOPQ) for approximate nearest neighbor search of high dimensional data.',
+    'description': 'Python code for training and deploying Locally Optimized'
+                   'Product Quantization (LOPQ) for approximate nearest'
+                   'neighbor search of high dimensional data.',
     'classifiers': [
             'Development Status :: 5 - Production/Stable',
             'License :: OSI Approved :: Apache Software License',
@@ -53,7 +58,11 @@ setup_arguments = {
     },
     'platforms': 'Windows,Linux,Solaris,Mac OS-X,Unix',
     'include_package_data': True,
-    'install_requires': ['protobuf>=2.6', 'numpy>=1.9', 'scipy>=0.14', 'scikit-learn>=0.18', 'lmdb>=0.87']
+    'install_requires': ['protobuf>=2.6',
+                         'numpy>=1.9',
+                         'scipy>=0.14',
+                         'scikit-learn>=0.18',
+                         'lmdb>=0.87']
 }
 
 
@@ -123,7 +132,7 @@ def add_scripts_to_package():
 
 def get_and_update_package_metadata():
     """
-    Update the package metadata for this package if we are building the package.
+    Update the package metadata when the package is being built.
     :return:metadata - Dictionary of metadata information
     """
     global setup_arguments

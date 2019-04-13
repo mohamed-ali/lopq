@@ -1,13 +1,13 @@
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 import time
 import numpy as np
 
 
 def compute_all_neighbors(data1, data2=None, just_nn=True):
-    """
-    For each point in data1, compute a ranked list of neighbor indices from data2.
-    If data2 is not provided, compute neighbors relative to data1
+    """ For each point in data1, compute a ranked list of neighbor indices
+    from data2. If data2 is not provided, compute neighbors relative to data1
 
     :param ndarray data1:
         an m1 x n dim matrix with observations on the rows
@@ -15,7 +15,8 @@ def compute_all_neighbors(data1, data2=None, just_nn=True):
         an m2 x n dim matrix with observations on the rows
 
     :returns ndarray:
-        an m1 x m2 dim matrix with the distance-sorted indices of neighbors on the rows
+        an m1 x m2 dim matrix with the distance-sorted indices of neighbors
+        on the rows
     """
     from scipy.spatial.distance import cdist
 
@@ -89,10 +90,11 @@ def get_proportion_of_reconstructions_with_same_codes(data, model):
     return float(count) / N
 
 
-def get_recall(searcher, queries, nns, thresholds=[1, 10, 100, 1000], normalize=True, verbose=False):
-    """
-    Given a LOPQSearcher object with indexed data and groundtruth nearest neighbors for a set of test
-    query vectors, collect and return recall statistics.
+def get_recall(searcher, queries, nns, thresholds=[1, 10, 100, 1000],
+               normalize=True, verbose=False):
+    """ Given a LOPQSearcher object with indexed data and groundtruth nearest
+    neighbors for a set of test query vectors, collect and return recall
+    statistics.
 
     :param LOPQSearcher searcher:
         a searcher that contains the indexed nearest neighbors
@@ -101,10 +103,11 @@ def get_recall(searcher, queries, nns, thresholds=[1, 10, 100, 1000], normalize=
     :param ndarray nns:
         a list of true nearest neighbor ids for each vector in queries
     :param list thresholds:
-        the recall thresholds to evaluate - the last entry defines the number of
-        results to retrieve before ranking
+        the recall thresholds to evaluate - the last entry defines the number
+        of results to retrieve before ranking
     :param bool normalize:
-        flag to indicate whether the result should be normalized by the number of queries
+        flag to indicate whether the result should be normalized by the number
+        of queries
     :param bool verbose:
         flag to print every 50th search to visualize progress
 
@@ -156,7 +159,9 @@ def get_subquantizer_distortion(data, model):
     pall = np.concatenate((p1, p2), axis=1)
     suball = model.subquantizers[0] + model.subquantizers[1]
 
-    dists = np.array([sum(np.linalg.norm(compute_residuals(d, c)[
-                     0], ord=2, axis=1) ** 2) for c, d in zip(suball, np.split(pall, 8, axis=1))])
+    dists = np.array([
+        sum(np.linalg.norm(compute_residuals(d, c)[0], ord=2, axis=1) ** 2)
+        for c, d in zip(suball, np.split(pall, 8, axis=1))
+        ])
 
     return dists / data.shape[0]

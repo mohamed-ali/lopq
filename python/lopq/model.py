@@ -1,5 +1,6 @@
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 import numpy as np
 from sklearn.cluster import KMeans
 import logging
@@ -11,23 +12,24 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
-
-########################################
+# ============================================================================
 # Core training algo
-########################################
+# ============================================================================
+
 
 def eigenvalue_allocation(num_buckets, eigenvalues):
     """
     Compute a permutation of eigenvalues to balance variance accross buckets
     of dimensions.
 
-    Described in section 3.2.4 in http://research.microsoft.com/pubs/187499/cvpr13opq.pdf
+    Described in section 3.2.4 in:
 
-    Note, the following slides indicate this function will break when fed eigenvalues < 1
-    without the scaling trick implemented below:
+    - http://research.microsoft.com/pubs/187499/cvpr13opq.pdf
 
-        https://www.robots.ox.ac.uk/~vgg/rg/slides/ge__cvpr2013__optimizedpq.pdf
+    Note, the following slides indicate this function will break when fed
+    eigenvalues < 1 without the scaling trick implemented below:
 
+    - https://www.robots.ox.ac.uk/~vgg/rg/slides/ge__cvpr2013__optimizedpq.pdf
 
     :param int num_buckets:
         the number of dimension buckets over which to allocate eigenvalues
@@ -83,11 +85,13 @@ def compute_local_rotations(data, C, num_buckets):
     :param ndarray C:
         a VxD matrix of cluster centroids
     :param int num_buckets:
-        the number of buckets accross which to balance variance in the rotation matrix
+        the number of buckets accross which to balance variance
+        in the rotation matrix
 
     :returns ndarray:
         a VxDxD tensor containing the rotation matrix for each cluster
-        where V is the number of clusters and D the dimension of the data (which is split here)
+        where V is the number of clusters and D the dimension of the data
+        (which is split here)
     :returns ndarray:
         a Nx1 vector of cluster assignments for each data point
     :returns ndarray:
@@ -109,8 +113,8 @@ def compute_local_rotations(data, C, num_buckets):
 
 
 def accumulate_covariance_estimators(data, C):
-    """
-    Accumulate covariance estimators for each cluster with a pass through the data.
+    """ Accumulate covariance estimators for each cluster with a pass
+    through the data.
 
     :param ndarray data:
         NxD array - observations on the rows
@@ -164,8 +168,8 @@ def accumulate_covariance_estimators(data, C):
 def compute_rotations_from_accumulators(A, mu, count, num_buckets):
     """
     Given accumulators computed on cluster residuals, compute the optimal
-    rotation matrix. The A and mu variables are modified in place and returned to
-    avoid memory allocation.
+    rotation matrix. The A and mu variables are modified in place and returned
+    to avoid memory allocation.
 
     :param ndarray A:
         a VxDxD array - total sum of outer products of residuals per cluster
@@ -177,7 +181,8 @@ def compute_rotations_from_accumulators(A, mu, count, num_buckets):
         the number of subvectors to balance variance across
 
     :returns ndarray A:
-        a VxDxD array - per cluster local rotations of size DxD on the first dimension
+        a VxDxD array - per cluster local rotations of size DxD on the first
+        dimension
     :returns ndarray mu:
         a VxD array of mean residuals per cluster
     """
@@ -198,8 +203,8 @@ def compute_rotations_from_accumulators(A, mu, count, num_buckets):
 
         # Compute eigenvalues, reuse A matrix
         if num_points < D:
-            logger.warn('Fewer points (%d) than dimensions (%d) in rotation computation for cluster %d' % (
-                num_points, D, i))
+            logger.warn('Fewer points (%d) than dimensions (%d) in rotation'
+                        ' computation for cluster %d' % (num_points, D, i))
             eigenvalues = np.ones(D)
             A[i] = np.eye(D)
         else:
@@ -246,7 +251,8 @@ def compute_residuals(data, C):
     return residuals, assignments
 
 
-def train_coarse(data, V=8, kmeans_coarse_iters=10, n_init=10, random_state=None, n_jobs=1):
+def train_coarse(data, V=8, kmeans_coarse_iters=10, n_init=10,
+                 random_state=None, n_jobs=1):
     """
     Train a kmeans model.
 
@@ -277,15 +283,18 @@ def train_coarse(data, V=8, kmeans_coarse_iters=10, n_init=10, random_state=None
     return model.cluster_centers_
 
 
-def train_subquantizers(data, num_buckets, subquantizer_clusters=256, kmeans_local_iters=20, n_init=10, random_state=None, n_jobs=1):
+def train_subquantizers(data, num_buckets, subquantizer_clusters=256,
+                        kmeans_local_iters=20, n_init=10, random_state=None,
+                        n_jobs=1):
     """
     Fit a set of num_buckets subquantizers for corresponding subvectors.
     """
 
     subquantizers = list()
     for i, d in enumerate(np.split(data, num_buckets, axis=1)):
-        model = KMeans(n_clusters=subquantizer_clusters, init="k-means++", max_iter=kmeans_local_iters,
-                       n_init=n_init, n_jobs=n_jobs, verbose=False, random_state=random_state)
+        model = KMeans(n_clusters=subquantizer_clusters, init="k-means++",
+                       max_iter=kmeans_local_iters, n_init=n_init,
+                       n_jobs=n_jobs, verbose=False, random_state=random_state)
         model.fit(d)
         subquantizers.append(model.cluster_centers_)
         logger.info('Fit subquantizer %d of %d.' % (i + 1, num_buckets))
@@ -318,10 +327,12 @@ def train(data, V=8, M=4, subquantizer_clusters=256, parameters=None,
     :param int kmeans_local_iters:
         kmeans iterations for subquantizers
     :param int n_init:
-        the number of independent kmeans runs for all kmeans when training - set low for faster training
+        the number of independent kmeans runs for all kmeans when training.
+        Set a low n_init for faster training
     :param float subquantizer_sample_ratio:
-        the proportion of the training data to sample for training subquantizers - since the number of
-        subquantizer clusters is much smaller then the number of coarse clusters, less data is needed
+        the proportion of the training data to sample for training
+        subquantizers - since the number of subquantizer clusters is much
+        smaller then the number of coarse clusters, less data is needed
     :param int random_state:
         a random seed used in all random operations during training if provided
     :param bool verbose:
@@ -330,7 +341,8 @@ def train(data, V=8, M=4, subquantizer_clusters=256, parameters=None,
         the number of jobs to use for KMeans cluster computation
 
     :returns tuple:
-        a tuple of model parameters that can be used to instantiate an LOPQModel object
+        a tuple of model parameters that can be used to instantiate
+        an LOPQModel object
     """
 
     # Set logging level for verbose mode
@@ -377,8 +389,8 @@ def train(data, V=8, M=4, subquantizer_clusters=256, parameters=None,
     N = data.shape[0]
     N2 = int(np.floor(subquantizer_sample_ratio * N))
     sample_inds = np.random.RandomState(random_state).choice(N, N2, False)
-    logger.info('Sampled training data for subquantizers with %f proportion (%d points).' % (
-        subquantizer_sample_ratio, N2))
+    logger.info('Sampled training data for subquantizers with %f proportion'
+                ' (%d points).' % (subquantizer_sample_ratio, N2))
 
     # Use assignments and residuals from rotation computation if available
     if assignments1 is not None:
@@ -399,17 +411,19 @@ def train(data, V=8, M=4, subquantizer_clusters=256, parameters=None,
 
     logger.info('Fitting subquantizers...')
     subquantizers1 = train_subquantizers(
-        projected1, M / 2, subquantizer_clusters, kmeans_local_iters, n_init, random_state=random_state, n_jobs=n_jobs)
+        projected1, M / 2, subquantizer_clusters, kmeans_local_iters, n_init,
+        random_state=random_state, n_jobs=n_jobs)
     subquantizers2 = train_subquantizers(
-        projected2, M / 2, subquantizer_clusters, kmeans_local_iters, n_init, random_state=random_state, n_jobs=n_jobs)
+        projected2, M / 2, subquantizer_clusters, kmeans_local_iters, n_init,
+        random_state=random_state, n_jobs=n_jobs)
     logger.info('Done fitting subquantizers.')
 
     return (C1, C2), (Rs1, Rs2), (mu1, mu2), (subquantizers1, subquantizers2)
 
-########################################
-# Model class
-########################################
 
+# ============================================================================
+# Model class
+# ============================================================================
 
 # Named tuple type for LOH codes
 LOPQCode = namedtuple('LOPQCode', ['coarse', 'fine'])
@@ -418,12 +432,14 @@ LOPQCode = namedtuple('LOPQCode', ['coarse', 'fine'])
 class LOPQModel(object):
     def __init__(self, V=8, M=4, subquantizer_clusters=256, parameters=None):
         """
-        Create an LOPQModel instance that encapsulates a complete LOPQ model with parameters and hyperparameters.
+        Create an LOPQModel instance that encapsulates a complete LOPQ model
+        with parameters and hyperparameters.
 
         :param int V:
             the number of clusters per a coarse split
         :param int M:
-            the total number of subvectors (equivalent to the total number of subquantizers)
+            the total number of subvectors (equivalent to the total number
+            of subquantizers)
         :param int subquantizer_clusters:
             the number of clusters for each subquantizer
         :param tuple parameters:
@@ -433,10 +449,12 @@ class LOPQModel(object):
 
             ((C1, C2), (Rs1, Rs2), (mu1, mu2), (subquantizers1, subquantizers2))
 
-            where each element is itself a pair with one split of parameters for the each of the coarse splits.
+            where each element is itself a pair with one split of parameters
+            for the each of the coarse splits.
 
-            the parameters have the following data types (V and M have the meaning described above,
-            D is the total dimension of the data, and S is the number of subquantizer clusters):
+            The parameters have the following data types (V and M have
+            the meaning described above, D is the total dimension of the data,
+            and S is the number of subquantizer clusters):
 
                 C: VxD/2 ndarray of coarse centroids
                 R: VxD/2xD/2 ndarray of fitted rotation matrices for each coarse cluster
@@ -445,7 +463,7 @@ class LOPQModel(object):
         """
 
         # If learned parameters are passed in explicitly, derive the model params by inspection.
-        self.Cs, self.Rs, self.mus, self.subquantizers = parameters if parameters is not None else (
+        self.Cs, self.Rs, self.mus, self.subquantizers = parameters or (
             None, None, None, None)
 
         if self.Cs is not None:
@@ -464,10 +482,11 @@ class LOPQModel(object):
             self.M = M
             self.subquantizer_clusters = subquantizer_clusters
 
-    def fit(self, data, kmeans_coarse_iters=10, kmeans_local_iters=20, n_init=10, subquantizer_sample_ratio=1.0, random_state=None, verbose=False, n_jobs=1):
-        """
-        Fit a model with the current model parameters. This method will use existing parameters and only
-        train missing parameters.
+    def fit(self, data, kmeans_coarse_iters=10, kmeans_local_iters=20,
+            n_init=10, subquantizer_sample_ratio=1.0, random_state=None,
+            verbose=False, n_jobs=1):
+        """ Fit a model with the current model parameters. This method will
+        use existing parameters and only train missing parameters.
 
         :param int kmeans_coarse_iters:
             the number of kmeans iterations for coarse quantizer training
@@ -487,8 +506,9 @@ class LOPQModel(object):
         """
         existing_parameters = (self.Cs, self.Rs, self.mus, self.subquantizers)
 
-        parameters = train(data, self.V, self.M, self.subquantizer_clusters, existing_parameters,
-                           kmeans_coarse_iters, kmeans_local_iters, n_init, subquantizer_sample_ratio,
+        parameters = train(data, self.V, self.M, self.subquantizer_clusters,
+                           existing_parameters, kmeans_coarse_iters,
+                           kmeans_local_iters, n_init, subquantizer_sample_ratio,
                            random_state, verbose, n_jobs)
 
         self.Cs, self.Rs, self.mus, self.subquantizers = parameters
