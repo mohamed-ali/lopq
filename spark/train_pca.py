@@ -1,5 +1,6 @@
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 from pyspark.context import SparkContext
 
 import numpy as np
@@ -80,8 +81,8 @@ def main(sc, args, data_load_fn=default_data_loading):
 
 def save_hdfs_pickle(m, pkl_path):
     """
-    Given a python object and a path on hdfs, save the object as a pickle file locally and copy the file
-    to the hdfs path.
+    Given a python object and a path on hdfs, save the object as a pickle
+    file locally and copy the file to the hdfs path.
     """
     print 'Saving pickle to temp file...'
     f = NamedTemporaryFile(delete=False)
@@ -102,16 +103,21 @@ if __name__ == '__main__':
     parser = ArgumentParser()
 
     # Data handling parameters
-    parser.add_argument('--data', dest='data', type=str,
-                        required=True, help='hdfs path to input data')
-    parser.add_argument('--data_udf', dest='data_udf', type=str, default=None,
-                        help='module name from which to load a data loading UDF')
-    parser.add_argument('--seed', dest='seed', type=int,
-                        default=None, help='optional random seed')
-    parser.add_argument('--sampling_ratio', dest='sampling_ratio', type=float,
-                        default=1.0, help='proportion of data to sample for training')
-    parser.add_argument('--agg_depth', dest='agg_depth', type=int, default=4,
-                        help='depth of tree aggregation to compute covariance estimator')
+    parser.add_argument(
+        '--data', dest='data', type=str,
+        required=True, help='hdfs path to input data')
+    parser.add_argument(
+        '--data_udf', dest='data_udf', type=str, default=None,
+        help='module name from which to load a data loading UDF')
+    parser.add_argument(
+        '--seed', dest='seed', type=int,
+        default=None, help='optional random seed')
+    parser.add_argument(
+        '--sampling_ratio', dest='sampling_ratio', type=float,
+        default=1.0, help='proportion of data to sample for training')
+    parser.add_argument(
+        '--agg_depth', dest='agg_depth', type=int, default=4,
+        help='depth of tree aggregation to compute covariance estimator')
 
     parser.add_argument('--output', dest='output', type=str, default=None,
                         help='hdfs path to output pickle file of parameters')

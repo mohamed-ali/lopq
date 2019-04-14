@@ -1,5 +1,6 @@
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 from pyspark.context import SparkContext
 
 import numpy as np
@@ -21,13 +22,15 @@ STEP_SUBQUANT = 2
 
 
 def default_data_loading(sc, data_path, sampling_ratio, seed):
-    """
-    This function loads training data from a text file, sampling it by the provided
-    ratio and random seed, and interprets each line as a tab-separated (id, data) pair
-    where 'data' is assumed to be a base64-encoded pickled numpy array. The ids are discarded.
+    """ This function loads training data from a text file, sampling it by
+    the provided ratio and random seed, and interprets each line as
+    a tab-separated (id, data) pair where 'data' is assumed to be
+    a base64-encoded pickled numpy array. The ids are discarded.
     The data is returned as an RDD of numpy arrays.
     """
-    # Compute the number of cores in our cluster - used below to heuristically set the number of partitions
+
+    # Compute the number of cores in our cluster.
+    # Used below to heuristically set the number of partitions
     total_cores = int(sc._conf.get('spark.executor.instances')
                       ) * int(sc._conf.get('spark.executor.cores'))
 
@@ -85,8 +88,8 @@ def train_coarse(sc, split_vecs, V, seed=None):
 
 
 def train_rotations(sc, split_vecs, M, Cs):
-    """
-    For compute rotations for each split of the data using given coarse quantizers.
+    """ For compute rotations for each split of the data using given coarse
+    quantizers.
     """
 
     Rs = []
@@ -152,16 +155,15 @@ def accumulate_covariance_estimators(sc, data, model):
 
 
 def dict_to_ndarray(d, N):
-    """
-    Helper for collating a dict with int keys into an ndarray. The value for a key
-    becomes the value at the corresponding index in the ndarray and indices missing
-    from the dict become zero ndarrays of the same dimension.
+    """ Helper for collating a dict with int keys into an ndarray. The value
+    for a key becomes the value at the corresponding index in the ndarray and
+    indices missing from the dict become zero ndarrays of the same dimension.
 
     :param dict d:
         a dict of (int, ndarray) or (int, number) key/values
     :param int N:
-        the size of the first dimension of the new ndarray (the rest of the dimensions
-        are determined by the shape of elements in d)
+        the size of the first dimension of the new ndarray (the rest of the
+        dimensions are determined by the shape of elements in d)
     """
 
     el = d.values()[0]
@@ -204,10 +206,10 @@ def compute_local_rotations(sc, data, model, num_buckets):
     return R, mu, count
 
 
-def train_subquantizers(sc, split_vecs, M, subquantizer_clusters, model, seed=None):
-    """
-    Project each data point into it's local space and compute subquantizers by clustering
-    each fine split of the locally projected data.
+def train_subquantizers(sc, split_vecs, M, subquantizer_clusters, model,
+                        seed=None):
+    """Project each data point into it's local space and compute subquantizers
+    by clustering each fine split of the locally projected data.
     """
     b = sc.broadcast(model)
 
@@ -227,19 +229,21 @@ def train_subquantizers(sc, split_vecs, M, subquantizer_clusters, model, seed=No
         data = split_vecs.map(lambda x: x[split])
         data.cache()
         sub = KMeans.train(data, subquantizer_clusters,
-                           initializationMode='random', maxIterations=10, seed=seed)
+                           initializationMode='random',
+                           maxIterations=10, seed=seed)
         data.unpersist()
         subquantizers.append(np.vstack(sub.clusterCenters))
 
-    return (subquantizers[:len(subquantizers) / 2], subquantizers[len(subquantizers) / 2:])
+    return (subquantizers[:len(subquantizers) / 2],
+            subquantizers[len(subquantizers) / 2:])
 
 
 def save_hdfs_pickle(m, pkl_path):
     """
-    Given a python object and a path on hdfs, save the object as a pickle file locally and copy the file
-    to the hdfs path.
+    Given a python object and a path on hdfs, save the object as a pickle
+    file locally and copy the file to the hdfs path.
     """
-    print 'Saving pickle to temp file...'
+    print('Saving pickle to temp file...')
     f = NamedTemporaryFile(delete=False)
     pkl.dump(m, f, -1)
     f.close()
@@ -250,16 +254,16 @@ def save_hdfs_pickle(m, pkl_path):
 
 
 def save_hdfs_proto(m, proto_path):
+    """ Given an LOPQModel object and a path on hdfs, save the model
+    parameters as a protobuf file locally and copy the file
+    to the hdfs path.
     """
-    Given an LOPQModel object and a path on hdfs, save the model parameters as a protobuf file locally and
-    copy the file to the hdfs path.
-    """
-    print 'Saving protobuf to temp file...'
+    print('Saving protobuf to temp file...')
     f = NamedTemporaryFile(delete=False)
     m.export_proto(f)
     f.close()
 
-    print 'Copying proto file to hdfs...'
+    print('Copying proto file to hdfs...')
     copy_to_hdfs(f, proto_path)
     os.remove(f.name)
 
@@ -269,8 +273,8 @@ def copy_to_hdfs(f, hdfs_path):
 
 
 def validate_arguments(args, model):
-    """
-    Check provided command line arguments to ensure they are coherent. Provide feedback for potential errors.
+    """ Check provided command line arguments to ensure they are coherent.
+    Provide feedback for potential errors.
     """
 
     # Parse steps
@@ -278,56 +282,74 @@ def validate_arguments(args, model):
 
     # Check that the steps make sense
     if STEP_ROTATION not in args.steps and len(args.steps) == 2:
-        print 'Training steps invalid'
+        print('Training steps invalid')
         sys.exit(1)
 
     # Find parameters and warn of possibly unintentional discrepancies
     if args.V is None:
         if model is not None:
             args.V = model.V
-            print 'Parameter V not specified: using V=%d from provided model.' % model.V
+            print('Parameter V not specified: using V=%d from provided'
+                  ' model.' % model.V)
         else:
-            print 'Parameter V not specified and no existing model provided. Exiting.'
+            print('Parameter V not specified and no existing model provided.'
+                  ' Exiting.')
             sys.exit(1)
     else:
         if model is not None and model.V != args.V:
             if STEP_COARSE in args.steps:
-                print 'Parameter V differs between command line argument and provided model: ' + \
-                      'coarse quantizers will be trained with V=%d' % args.V
+                print('Parameter V differs between command line argument and '
+                      'provided model: coarse quantizers will be trained with'
+                      ' V=%d' % args.V)
             else:
-                print 'Parameter V differs between command line argument and provided model: ' + \
-                      'coarse quantizers must be retrained or this discrepancy corrected. Exiting.'
+                print('Parameter V differs between command line argument and '
+                      'provided model: coarse quantizers must be retrained or'
+                      ' this discrepancy corrected. Exiting.')
                 sys.exit(1)
 
     if STEP_ROTATION in args.steps or STEP_SUBQUANT in args.steps:
         if args.M is None:
             if model is not None:
                 args.M = model.M
-                print 'Parameter M not specified: using M=%d from provided model.' % model.M
+                print('Parameter M not specified: using M=%d from provided '
+                      'model.' % model.M)
             else:
-                print 'Parameter M not specified and no existing model provided. Exiting.'
+                print('Parameter M not specified and no existing model '
+                      'provided. Exiting.')
                 sys.exit(1)
         else:
             if model is not None and model.M != args.M:
                 if STEP_ROTATION in args.steps:
-                    print 'Parameter M differs between command line argument and provided model: ' + \
-                          'model will be trained with M=%d' % args.M
+                    print('Parameter M differs between command line argument '
+                          'and provided model: model will be trained with '
+                          'M=%d' % args.M)
                 else:
-                    print 'Parameter M differs between command line argument and provided model: ' + \
-                          'rotations must be retrained or this discrepancy corrected. Exiting.'
+                    print('Parameter M differs between command line argument '
+                          'and provided model: rotations must be retrained or'
+                          ' this discrepancy corrected. Exiting.')
                     sys.exit(1)
 
     if STEP_ROTATION in args.steps:
-        if STEP_COARSE not in args.steps and (model is None or model.Cs is None):
-            print 'Cannot train rotations without coarse quantizers. Either train coarse quantizers or provide an existing model. Exiting.'
+        is_invalid_model = (model is None or model.Cs is None)
+        if STEP_COARSE not in args.steps and is_invalid_model:
+            print('Cannot train rotations without coarse quantizers. Either '
+                  'train coarse quantizers or provide an existing model. '
+                  'Exiting.')
             sys.exit(1)
 
     if STEP_SUBQUANT in args.steps:
-        if STEP_COARSE not in args.steps and (model is None or model.Cs is None):
-            print 'Cannot train subquantizers without coarse quantizers. Either train coarse quantizers or provide an existing model. Exiting.'
+        is_invalid_model = (model is None or model.Cs is None)
+        if STEP_COARSE not in args.steps and is_invalid_model:
+            print('Cannot train subquantizers without coarse quantizers. '
+                  'Either train coarse quantizers or provide an existing'
+                  ' model. Exiting.')
             sys.exit(1)
-        if STEP_ROTATION not in args.steps and (model is None or model.Rs is None or model.mus is None):
-            print 'Cannot train subquantizers without rotations. Either train rotations or provide an existing model. Exiting.'
+
+        is_invalid_model = (model is None or model.Rs is None
+                            or model.mus is None)
+        if STEP_ROTATION not in args.steps and is_invalid_model:
+            print('Cannot train subquantizers without rotations. Either train'
+                  ' rotations or provide an existing model. Exiting.')
             sys.exit(1)
 
     return args
@@ -338,39 +360,56 @@ if __name__ == "__main__":
     parser = ArgumentParser()
 
     # Data handling parameters
-    parser.add_argument('--data', dest='data', type=str,
-                        required=True, help='hdfs path to input data')
-    parser.add_argument('--data_udf', dest='data_udf', type=str, default=None,
-                        help='module name from which to load a data loading UDF')
-    parser.add_argument('--seed', dest='seed', type=int,
-                        default=None, help='optional random seed')
-    parser.add_argument('--sampling_ratio', dest='sampling_ratio', type=float,
-                        default=1.0, help='proportion of data to sample for training')
-    parser.add_argument('--subquantizer_sampling_ratio', dest='subquantizer_sampling_ratio', type=float, default=1.0,
-                        help='proportion of data to subsample for subquantizer training')
+    parser.add_argument(
+        '--data', dest='data', type=str,
+        required=True, help='hdfs path to input data')
+    parser.add_argument(
+        '--data_udf', dest='data_udf', type=str, default=None,
+        help='module name from which to load a data loading UDF')
+    parser.add_argument(
+        '--seed', dest='seed', type=int,
+        default=None, help='optional random seed')
+    parser.add_argument(
+        '--sampling_ratio', dest='sampling_ratio', type=float,
+        default=1.0, help='proportion of data to sample for training')
+    parser.add_argument(
+        '--subquantizer_sampling_ratio', dest='subquantizer_sampling_ratio',
+        type=float, default=1.0,
+        help='proportion of data to subsample for subquantizer training')
 
     # Model parameters
     existing_model_group = parser.add_mutually_exclusive_group()
-    existing_model_group.add_argument('--existing_model_pkl', dest='existing_model_pkl', type=str, default=None,
-                                      help='a pickled LOPQModel from which to extract existing parameters')
-    existing_model_group.add_argument('--existing_model_proto', dest='existing_model_proto', type=str, default=None,
-                                      help='a protobuf of existing model parameters')
+    existing_model_group.add_argument(
+        '--existing_model_pkl', dest='existing_model_pkl',
+        type=str, default=None,
+        help='a pickled LOPQModel from which to extract existing parameters')
+    existing_model_group.add_argument(
+        '--existing_model_proto', dest='existing_model_proto',
+        type=str, default=None,
+        help='a protobuf of existing model parameters')
 
     # Model hyperparameters
-    parser.add_argument('--V', dest='V', type=int,
-                        default=None, help='number of coarse clusters')
-    parser.add_argument('--M', dest='M', type=int, default=None,
-                        help='total number of subquantizers')
-    parser.add_argument('--subquantizer_clusters', dest='subquantizer_clusters',
-                        type=int, default=256, help='number of subquantizer clusters')
+    parser.add_argument(
+        '--V', dest='V', type=int,
+        default=None, help='number of coarse clusters')
+    parser.add_argument(
+        '--M', dest='M', type=int, default=None,
+        help='total number of subquantizers')
+    parser.add_argument(
+        '--subquantizer_clusters', dest='subquantizer_clusters',
+        type=int, default=256, help='number of subquantizer clusters')
 
     # Training and output directives
-    parser.add_argument('--steps', dest='steps', type=str, default='0,1,2',
-                        help='comma-separated list of integers indicating which steps of training to perform')
-    parser.add_argument('--model_pkl', dest='model_pkl', type=str, default=None,
-                        help='hdfs path to save pickle file of resulting LOPQModel')
-    parser.add_argument('--model_proto', dest='model_proto', type=str, default=None,
-                        help='hdfs path to save protobuf file of resulting model parameters')
+    parser.add_argument(
+        '--steps', dest='steps', type=str, default='0,1,2',
+        help='comma-separated list of integers indicating which'
+             'steps of training to perform')
+    parser.add_argument(
+        '--model_pkl', dest='model_pkl', type=str, default=None,
+        help='hdfs path to save pickle file of resulting LOPQModel')
+    parser.add_argument(
+        '--model_proto', dest='model_proto', type=str, default=None,
+        help='hdfs path to save protobuf file of resulting model parameters')
 
     args = parser.parse_args()
 
@@ -428,18 +467,22 @@ if __name__ == "__main__":
     # Get subquantizers
     if STEP_SUBQUANT in args.steps:
         model = LOPQModel(
-            V=args.V, M=args.M, subquantizer_clusters=args.subquantizer_clusters, parameters=(Cs, Rs, mus, None))
+            V=args.V, M=args.M,
+            subquantizer_clusters=args.subquantizer_clusters,
+            parameters=(Cs, Rs, mus, None))
 
         if args.subquantizer_sampling_ratio != 1.0:
             data = data.sample(
                 False, args.subquantizer_sampling_ratio, args.seed)
 
         subs = train_subquantizers(
-            sc, data, args.M, args.subquantizer_clusters, model, seed=args.seed)
+            sc, data, args.M, args.subquantizer_clusters, model,
+            seed=args.seed)
 
     # Final output model
     model = LOPQModel(
-        V=args.V, M=args.M, subquantizer_clusters=args.subquantizer_clusters, parameters=(Cs, Rs, mus, subs))
+        V=args.V, M=args.M, subquantizer_clusters=args.subquantizer_clusters,
+        parameters=(Cs, Rs, mus, subs))
 
     if args.model_pkl:
         save_hdfs_pickle(model, args.model_pkl)
