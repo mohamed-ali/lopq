@@ -1,12 +1,15 @@
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 """
-This script illustrates how to prepare PCA parameters before using them in the LOPQ pipeline.
+This script illustrates how to prepare PCA parameters before using them
+in the LOPQ pipeline.
 
-The `pca_params` argument is the path to a pickle file containing PCA parameters like that
-produced as a result of `train_pca.py`, and the `D` argument is the desired dimension of the
-final feature. This script truncates then permutes the dimensions of the PCA matrix to balance
-the variance across the the two halves of the final vector.
+The `pca_params` argument is the path to a pickle file containing PCA
+parameters like that produced as a result of `train_pca.py`, and the `D`
+argument is the desired dimension of the final feature. This script truncates
+then permutes the dimensions of the PCA matrix to balance the variance across
+the the two halves of the final vector.
 """
 import cPickle as pkl
 import numpy as np
@@ -43,12 +46,15 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
 
-    parser.add_argument('--pca_params', dest='pca_params', type=str,
-                        required=True, help='path to pickle file of PCA parameters')
-    parser.add_argument('--D', dest='D', type=int, default=128,
-                        help='desired final feature dimension')
-    parser.add_argument('--output', dest='output', type=str,
-                        required=True, help='path to pickle file of new PCA parameters')
+    parser.add_argument(
+        '--pca_params', dest='pca_params', type=str,
+        required=True, help='path to pickle file of PCA parameters')
+    parser.add_argument(
+        '--D', dest='D', type=int, default=128,
+        help='desired final feature dimension')
+    parser.add_argument(
+        '--output', dest='output', type=str,
+        required=True, help='path to pickle file of new PCA parameters')
     args = parser.parse_args()
 
     main(args)

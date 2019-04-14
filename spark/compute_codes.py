@@ -1,5 +1,6 @@
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 from pyspark.context import SparkContext
 
 import cPickle as pkl
@@ -10,13 +11,13 @@ from lopq.model import LOPQModel
 
 
 def default_data_loading(sc, data_path, sampling_ratio, seed):
+    """ This function loads data from a text file, sampling it by the provided
+    ratio and random seed, and interprets each line as a tab-separated
+    (id, data) pair where 'data' is assumed to be a base64-encoded pickled
+    numpy array. The data is returned as an RDD of (id, numpy array) tuples.
     """
-    This function loads data from a text file, sampling it by the provided
-    ratio and random seed, and interprets each line as a tab-separated (id, data) pair
-    where 'data' is assumed to be a base64-encoded pickled numpy array.
-    The data is returned as an RDD of (id, numpy array) tuples.
-    """
-    # Compute the number of cores in our cluster - used below to heuristically set the number of partitions
+    # Compute the number of cores in our cluster.
+    # used below to heuristically set the number of partitions
     total_cores = int(sc._conf.get('spark.executor.instances')
                       ) * int(sc._conf.get('spark.executor.cores'))
 
@@ -59,22 +60,29 @@ if __name__ == "__main__":
     parser = ArgumentParser()
 
     # Data handling parameters
-    parser.add_argument('--data', dest='data', type=str, default=None,
-                        required=True, help='hdfs path to input data')
-    parser.add_argument('--data_udf', dest='data_udf', type=str, default=None,
-                        help='module name from which to load a data loading UDF')
-    parser.add_argument('--seed', dest='seed', type=int,
-                        default=None, help='optional random seed for sampling')
-    parser.add_argument('--sampling_ratio', dest='sampling_ratio', type=float,
-                        default=1.0, help='proportion of data to sample for model application')
-    parser.add_argument('--output', dest='output', type=str,
-                        default=None, required=True, help='hdfs path to output data')
+    parser.add_argument(
+        '--data', dest='data', type=str, default=None,
+        required=True, help='hdfs path to input data')
+    parser.add_argument(
+        '--data_udf', dest='data_udf', type=str, default=None,
+        help='module name from which to load a data loading UDF')
+    parser.add_argument(
+        '--seed', dest='seed', type=int,
+        default=None, help='optional random seed for sampling')
+    parser.add_argument(
+        '--sampling_ratio', dest='sampling_ratio', type=float,
+        default=1.0, help='proportion of data to sample for model application')
+    parser.add_argument(
+        '--output', dest='output', type=str,
+        default=None, required=True, help='hdfs path to output data')
 
     existing_model_group = parser.add_mutually_exclusive_group(required=True)
-    existing_model_group.add_argument('--model_pkl', dest='model_pkl', type=str,
-                                      default=None, help='a pickled LOPQModel to evaluate on the data')
-    existing_model_group.add_argument('--model_proto', dest='model_proto', type=str,
-                                      default=None, help='a protobuf LOPQModel to evaluate on the data')
+    existing_model_group.add_argument(
+        '--model_pkl', dest='model_pkl', type=str,
+        default=None, help='a pickled LOPQModel to evaluate on the data')
+    existing_model_group.add_argument(
+        '--model_proto', dest='model_proto', type=str,
+        default=None, help='a protobuf LOPQModel to evaluate on the data')
 
     args = parser.parse_args()
 
