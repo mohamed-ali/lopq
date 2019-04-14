@@ -1,5 +1,6 @@
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 from nose.tools import assert_true, assert_equal
 
 import pickle as pkl
@@ -8,14 +9,16 @@ import os
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-sys.path.insert(1, os.path.abspath('..'))
-from lopq.model import LOPQModel, eigenvalue_allocation, accumulate_covariance_estimators, compute_rotations_from_accumulators
+sys.path.insert(1, os.path.abspath('..')) # noqa
+from lopq.model import (LOPQModel, eigenvalue_allocation,
+                        accumulate_covariance_estimators,
+                        compute_rotations_from_accumulators)
 from lopq.search import LOPQSearcher, LOPQSearcherLMDB
 from lopq.eval import compute_all_neighbors, get_cell_histogram, get_recall
 
-########################################
+# ============================================================================
 # Helpers
-########################################
+# ============================================================================
 
 
 def relpath(x):
@@ -34,9 +37,9 @@ def make_random_model():
     m.fit(np.random.RandomState(42).rand(200, 8), n_init=1)
     return m
 
-########################################
+# ============================================================================
 # Tests
-########################################
+# ============================================================================
 
 
 def test_eigenvalue_allocation():
@@ -75,10 +78,10 @@ def test_eigenvalue_allocation_normalized_features():
 
 
 def test_accumulate_covariance_estimators():
-    data, centroids = pkl.load(
-        open(relpath('./testdata/test_accumulate_covariance_estimators_input.pkl')))
-    expected = pkl.load(
-        open(relpath('./testdata/test_accumulate_covariance_estimators_output.pkl')))
+    data, centroids = pkl.load(open(relpath(
+        './testdata/test_accumulate_covariance_estimators_input.pkl')))
+    expected = pkl.load(open(relpath(
+        './testdata/test_accumulate_covariance_estimators_output.pkl')))
 
     actual = accumulate_covariance_estimators(data, centroids)
 
@@ -100,10 +103,10 @@ def test_accumulate_covariance_estimators():
 
 def test_compute_rotations_from_accumulators():
 
-    A, mu, count, num_buckets = pkl.load(
-        open(relpath('./testdata/test_compute_rotations_from_accumulators_input.pkl')))
-    expected = pkl.load(
-        open(relpath('./testdata/test_compute_rotations_from_accumulators_output.pkl')))
+    A, mu, count, num_buckets = pkl.load(open(relpath(
+        './testdata/test_compute_rotations_from_accumulators_input.pkl')))
+    expected = pkl.load(open(relpath(
+        './testdata/test_compute_rotations_from_accumulators_output.pkl')))
 
     actual = compute_rotations_from_accumulators(A, mu, count, num_buckets)
 
@@ -132,7 +135,8 @@ def test_oxford5k():
     train, test = train_test_split(
         data, test_size=0.2, random_state=random_state)
 
-    # Compute distance-sorted neighbors in training set for each point in test set
+    # Compute distance-sorted neighbors in training set for each point
+    # in test set
     nns = compute_all_neighbors(test, train)
 
     # Fit model

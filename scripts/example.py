@@ -1,10 +1,12 @@
 # Copyright 2015, Yahoo Inc.
-# Licensed under the terms of the Apache License, Version 2.0. See the LICENSE file associated with the project for terms.
+# Licensed under the terms of the Apache License, Version 2.0.
+# See the LICENSE file associated with the project for terms.
 import sys
 import os
 
-# Add the lopq module - not needed if they are available in the python environment
-sys.path.append(os.path.abspath('../python'))
+# Add the lopq module - not needed if they are available
+# in the python environment
+sys.path.append(os.path.abspath('../python')) # noqa
 
 import numpy as np
 from sklearn.cross_validation import train_test_split
@@ -26,8 +28,8 @@ def pca(data):
     A simple PCA implementation that demonstrates how eigenvalue allocation
     is used to permute dimensions in order to balance the variance across
     subvectors. There are plenty of PCA implementations elsewhere. What is
-    important is that the eigenvalues can be used to compute a variance-balancing
-    dimension permutation.
+    important is that the eigenvalues can be used to compute
+    a variance-balancing dimension permutation.
     """
 
     # Compute mean
@@ -42,7 +44,8 @@ def pca(data):
     # Compute eigen decomposition
     eigenvalues, P = np.linalg.eigh(A)
 
-    # Compute a permutation of dimensions to balance variance among 2 subvectors
+    # Compute a permutation of dimensions to balance variance among
+    # 2 subvectors
     permuted_inds = eigenvalue_allocation(2, eigenvalues)
 
     # Build the permutation into the rotation matrix. One can alternately keep
@@ -78,23 +81,25 @@ def main():
     # a set of queries for which we will compute the true nearest neighbors.
     train, test = train_test_split(data, test_size=0.2)
 
-    # Compute distance-sorted neighbors in training set for each point in test set.
-    # These will be our groundtruth for recall evaluation.
+    # Compute distance-sorted neighbors in training set for each point
+    # in test set. These will be our groundtruth for recall evaluation.
     nns = compute_all_neighbors(test, train)
 
     # Fit model
     m = LOPQModel(V=16, M=8)
     m.fit(train, n_init=1)
 
-    # Note that we didn't specify a random seed for fitting the model, so different
-    # runs will be different. You may also see a warning that some local projections
-    # can't be estimated because too few points fall in a cluster. This is ok for the
-    # purposes of this demo, but you might want to avoid this by increasing the amount
-    # of training data or decreasing the number of clusters (the V hyperparameter).
+    # Note that we didn't specify a random seed for fitting the model,
+    # so different runs will be different. You may also see a warning that
+    # some local projections can't be estimated because too few points fall
+    # in a cluster. This is ok for the purposes of this demo, but you might
+    # want to avoid this by increasing the amount of training data
+    # or decreasing the number of clusters (the V hyperparameter).
 
-    # With a model in hand, we can test it's recall. We populate a LOPQSearcher
-    # instance with data and get recall stats. By default, we will retrieve 1000
-    # ranked results for each query vector for recall evaluation.
+    # With a model in hand, we can test it's recall. We populate
+    # a LOPQSearcher instance with data and get recall stats. By default,
+    # we will retrieve 1000 ranked results for each query vector for recall
+    # evaluation.
     searcher = LOPQSearcher(m)
     searcher.add_data(train)
     recall, _ = get_recall(searcher, test, nns)
@@ -114,8 +119,8 @@ def main():
     print 'Recall (V=%d, M=%d, subquants=%d): %s' % (
         m2.V, m2.M, m2.subquantizer_clusters, str(recall))
 
-    # The recall is probably higher. We got better recall with a finer quantization
-    # at the expense of more data required for index items.
+    # The recall is probably higher. We got better recall with a finer
+    # quantization at the expense of more data required for index items.
 
     # We can also hold both coarse quantizers and rotations fixed and see what
     # increasing the number of subquantizer clusters does to performance.
@@ -129,10 +134,11 @@ def main():
     print 'Recall (V=%d, M=%d, subquants=%d): %s' % (
         m3.V, m3.M, m3.subquantizer_clusters, str(recall))
 
-    # The recall is probably better than the first but worse than the second. We increased recall
-    # only a little by increasing the number of model parameters (double the subquatizer centroids),
-    # the index storage requirement (another bit for each fine code), and distance computation time
-    # (double the subquantizer centroids).
+    # The recall is probably better than the first but worse than the second.
+    # We increased recall only a little by increasing the number of model
+    # parameters (double the subquatizer centroids), the index storage
+    # requirement (another bit for each fine code), and distance computation
+    # time (double the subquantizer centroids).
 
 
 if __name__ == '__main__':
